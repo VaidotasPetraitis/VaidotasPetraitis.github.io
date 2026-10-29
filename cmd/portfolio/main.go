@@ -1,14 +1,25 @@
 package main
 
 import (
+	"cmp"
+	"errors"
+	"log/slog"
+	"net/http"
 	"os"
 	"portfolio/internal/httpserver"
-	"portfolio/internal/httpserver/process"
 	"portfolio/web"
 )
 
-func main() { os.Exit(process.ExitStatus(run())) }
+func main() {
+	address := cmp.Or(os.Getenv("PORTFOLIO_ADDR"), "127.0.0.1:8080")
+	handler := httpserver.Handler(web.Assets())
+	os.Exit(exitCode(httpserver.ServeHTTP(handler, address)))
+}
 
-func run() error {
-	return process.ServeHTTP(httpserver.Handler(web.Assets()), process.Address())
+func exitCode(err error) int {
+	if err == nil || errors.Is(err, http.ErrServerClosed) {
+		return 0
+	}
+	slog.Error("portfolio stopped", "error", err)
+	return 1
 }

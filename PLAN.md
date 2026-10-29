@@ -215,7 +215,7 @@ internal/explorer/                # Explorer model, handler and reader
 internal/data/                    # authored JSON and embedding only
 internal/httpserver/              # routes, static delivery and endpoint handlers
 internal/httpserver/response/     # shared JSON responses
-internal/httpserver/process/      # environment, listeners, signals and shutdown
+internal/httpserver/server.go     # listener settings, signals and shutdown
 web/embed.go
 web/dist/                         # generated frontend build
 web/public/images/                # curated runtime assets
@@ -231,7 +231,7 @@ README.md
 PLAN.md
 ```
 
-Keep existing checks beside the behavior they verify. HTTP handlers call domain queries for ordering, summary projection and lookup; listener and signal registration stay outside test runners; process helpers are checked without starting a server. Main explicitly wires dependencies. Share encoding/error helpers and reused UI. Add narrow interfaces only for concrete needs. No repository layer, query framework, DI framework, event bus or mediator is required. Only runtime assets under web/public/images belong in the frontend build.
+Keep existing checks beside the behavior they verify. HTTP handlers call domain queries for ordering, summary projection and lookup; listener and signal registration stay outside test runners; shutdown and exit handling are checked without starting a server. Main explicitly wires dependencies. Share encoding/error helpers and reused UI. Add narrow interfaces only for concrete needs. No repository layer, query framework, DI framework, event bus or mediator is required. Only runtime assets under web/public/images belong in the frontend build.
 
 ## 8. API and errors
 
@@ -244,7 +244,7 @@ Endpoints:
 - `GET /api/v1/certifications`
 - `GET /healthz`
 
-The project list supplies ordered category/slug/title summaries for Explorer navigation. Detail responses supply structured content, diagram and gallery. List endpoints return arrays, including `[]` for empty collections. Unknown slugs return 404. Unknown API routes return JSON 404; unsupported methods return 405. Category-filter API endpoints from the original plan are unnecessary for the revised Explorer-only navigation and are removed from initial scope.
+The project list supplies ordered category/slug/title summaries for Explorer navigation. Detail responses supply structured content, diagram and gallery. List endpoints return arrays, including `[]` for empty collections. Unknown slugs return 404. Unknown API routes use the standard router's plain-text 404; unsupported methods use its plain-text 405. GET registrations also support HEAD. Category-filter API endpoints from the original plan are unnecessary for the revised Explorer-only navigation and are removed from initial scope.
 
 Use idiomatic `(value, error)` returns and `errors.Is`/`errors.As`; never compare error strings. Application errors do not contain HTTP status codes. Map invalid input to 400, missing project to 404, unexpected failures to safe 500 messages. Log internal diagnostics. Use one JSON error shape:
 
@@ -273,7 +273,7 @@ Build frontend before Go:
 
 Go embeds portfolio JSON, HTML entry, built JS/CSS and curated public images. Node is build-time only. Production uses one process and listening port. Document commands first; an optional script may be a shortcut. Development may use Vite hot reload alongside Go.
 
-Serve the React entry for `/` (including section query strings) and `/projects/:slug`. Missing assets return 404 rather than HTML. Unknown API routes return JSON 404. Other unknown page paths return HTTP 404. An unknown project slug initially receives the client shell with 200, then its API returns 404 and React shows not found; this remains an accepted client-rendering limitation.
+Serve the React entry for `/` (including section query strings) and `/projects/:slug`. Missing assets return 404 rather than HTML. Unknown API routes use the standard router's plain-text 404. Other unknown page paths return HTTP 404. An unknown project slug initially receives the client shell with 200, then its API returns 404 and React shows not found; this remains an accepted client-rendering limitation.
 
 Include sensible timeouts, request/error logs and graceful shutdown. Use platform-managed HTTPS. Hosting and domain remain portable decisions to settle before launch; no provider SDK or public URL is needed for the initial local build. No custom cache service/policy is required.
 

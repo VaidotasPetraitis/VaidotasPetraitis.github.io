@@ -17,7 +17,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Content JSON formatting failed' }
     } finally { Pop-Location }
 
-    go test ./internal/... ./web
+    go test ./cmd/... ./internal/... ./web
     if ($LASTEXITCODE -ne 0) { throw 'Go tests failed' }
     go vet ./cmd/... ./internal/... ./web
     if ($LASTEXITCODE -ne 0) { throw 'Go analysis failed' }

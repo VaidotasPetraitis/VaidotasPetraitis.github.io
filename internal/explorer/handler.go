@@ -7,9 +7,6 @@ import (
 
 func Handler(reader Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !response.Get(w, r) {
-			return
-		}
 		value, err := reader.Explorer()
 		if err != nil {
 			response.Error(w, http.StatusInternalServerError, "invalid_content", err.Error())

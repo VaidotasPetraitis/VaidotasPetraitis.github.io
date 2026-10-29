@@ -1,32 +1,23 @@
-package httpserver
+package middleware
 
 import (
 	"log/slog"
 	"net/http"
-	"portfolio/internal/httpserver/response"
 	"time"
 )
 
-func requestLog(next http.Handler) http.Handler {
+func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		response := &responseWriter{ResponseWriter: w, status: 200}
-		defer func() {
-			recoverRequest(response, recover())
-			slog.Info("request", "method", r.Method, "path", r.URL.Path, "status", response.status, "duration", time.Since(start))
-		}()
 		next.ServeHTTP(response, r)
+		slog.Info("request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", response.status,
+			"duration", time.Since(start),
+		)
 	})
-}
-
-func recoverRequest(writer *responseWriter, failure any) {
-	if failure == nil {
-		return
-	}
-	slog.Error("request panic", "error", failure)
-	if !writer.wrote {
-		response.Error(writer, 500, "internal_error", "Unable to complete request.")
-	}
 }
 
 type responseWriter struct {

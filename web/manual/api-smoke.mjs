@@ -34,7 +34,7 @@ async function checkRoutes() {
   assert.equal((await request(base + '/images/absent.png')).status, 404);
   const method = await request(base + '/api/v1/projects', { method: 'POST' });
   assert.equal(method.status, 405);
-  assert.equal(method.headers.get('allow'), 'GET');
+  assert.equal(method.headers.get('allow'), 'GET, HEAD');
 }
 
 async function request(url, options = {}) {

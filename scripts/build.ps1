@@ -11,7 +11,7 @@ try {
 } finally { Pop-Location }
 Push-Location $projectRoot
 try {
-    go test ./internal/... ./web
+    go test ./cmd/... ./internal/... ./web
     if ($LASTEXITCODE -ne 0) { throw 'Go tests failed' }
     go vet ./cmd/... ./internal/... ./web
     if ($LASTEXITCODE -ne 0) { throw 'go vet failed' }

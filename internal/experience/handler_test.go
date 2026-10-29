@@ -27,17 +27,6 @@ func TestHandlerReturnsExperience(t *testing.T) {
 	}
 }
 
-func TestHandlerRejectsPost(t *testing.T) {
-	reader := JSONReader{Source: jsonfile.Reader{Files: fstest.MapFS{}}}
-	response := httptest.NewRecorder()
-
-	Handler(reader)(response, httptest.NewRequest("POST", "/", nil))
-
-	if response.Code != 405 {
-		t.Fatalf("status = %d, want 405", response.Code)
-	}
-}
-
 func TestHandlerReportsReadFailure(t *testing.T) {
 	reader := JSONReader{Source: jsonfile.Reader{Files: fstest.MapFS{}}}
 	response := httptest.NewRecorder()

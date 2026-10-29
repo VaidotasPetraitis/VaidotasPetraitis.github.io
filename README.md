@@ -11,7 +11,7 @@ cd web
 npm.cmd ci
 npm.cmd run build
 cd ..
-go test ./internal/... ./web
+go test ./cmd/... ./internal/... ./web
 go vet ./cmd/... ./internal/... ./web
 go build -o bin/portfolio.exe ./cmd/portfolio
 .\bin\portfolio.exe
@@ -39,7 +39,7 @@ After the first frontend build, run `go run ./cmd/portfolio` in one terminal and
 
 ## Content and navigation
 
-Authored JSON lives under `internal/data/`, with all projects in `projects.json`. A small embed declaration exposes the files without depending on feature slices. Each feature keeps its models, HTTP handlers, query interface and `JSONReader` implementation. Routes inject the concrete readers, which share one `jsonfile.Reader` for file I/O, JSON decoding and filename-wrapped errors; handlers depend only on feature queries. JSON readers preserve array order and handle decoding and lookup on each request, with no database package, startup loading or cache. File or decoding errors return a JSON error for that request. Image, date and diagram checks live in content tests. Images stay in `web/public/images`. Restart Go after editing content.
+Authored JSON lives under `internal/data/`, with all projects in `projects.json`. A small embed declaration exposes the files without depending on feature slices. Each feature keeps its models, HTTP handlers, query interface and `JSONReader` implementation. Routes use native `GET /path` patterns. There is one router listing API and frontend URLs, wrapped once by a pipeline of logging/security middleware from `internal/httpserver/middleware/`; the composer stays beside the routes. Completed requests log method, path, status and duration; unexpected panics use Go's HTTP server recovery rather than custom JSON error conversion. JSON content type is set where JSON is encoded. The router handles methods, including HEAD support for GET endpoints. Routes inject the concrete readers, which share one `jsonfile.Reader` for file I/O, JSON decoding and filename-wrapped errors; handlers depend only on feature queries. JSON readers preserve array order and handle decoding and lookup on each request, with no database package, startup loading or cache. File or decoding errors return a JSON error for that request. Image, date and diagram checks live in content tests. Images stay in `web/public/images`. Restart Go after editing content.
 
 Routes: `/` (About), `/?section=experience`, `/?section=certifications` and `/projects/{slug}`. Browser history works normally. Folders expand without navigation. Project selection is direct. On mobile, Browse portfolio exposes the same navigation. Gallery thumbnails open original images in a keyboard-accessible dialog; Escape closes it and arrow keys change images.
 
@@ -57,13 +57,13 @@ The About portrait uses `portrait-banner.png`, an image-edited transparent cutou
 
 Example: `curl.exe http://127.0.0.1:8080/api/v1/projects/quiz`.
 
-Unknown API routes and projects return JSON 404. Unsupported endpoint methods return 405 with `Allow`. Errors follow `{"error":{"code":"project_not_found","message":"Project not found."}}`. Missing assets return HTTP 404 and never the React entry file. A nonexistent project page initially receives the client shell, then shows not found after its API returns 404.
+Unknown API routes use the standard router's plain-text 404; unknown projects return JSON 404. Unsupported endpoint methods use the standard router's plain-text 405 with `Allow: GET, HEAD`. Application errors follow `{"error":{"code":"project_not_found","message":"Project not found."}}`. Missing assets return HTTP 404 and never the React entry file. A nonexistent project page initially receives the client shell, then shows not found after its API returns 404.
 
 ## Verification
 
-Go tests live beside the files they test: feature handler and reader tests, shared JSON reader tests, embedded-content checks, and HTTP route, static-serving, logging and process-helper checks. Tests use small in-memory JSON fixtures and separate named tests for success, rejection and failure. Content tests verify real image files and diagram references. Tests do not open listeners or register signal handlers.
+Go tests live beside the files they test: feature handler and reader tests, shared JSON reader tests, embedded-content checks, and HTTP route, frontend-serving, logging and server-shutdown checks. Address configuration and exit handling live in cmd/portfolio/main.go; listener settings and graceful shutdown live together in internal/httpserver/server.go. Tests use small in-memory JSON fixtures and separate named tests for success, rejection and failure. Content tests verify real image files and diagram references. Tests do not open listeners or register signal handlers.
 
-The latest Go check measured 42 production functions: maximum statement-coverage CRAP 4.000, none above 4, and 91.3% statement coverage. The calculation uses cyclomatic complexity and Go statement coverage across cmd/, internal/ and web/embed.go; tests, generated files, third-party dependencies and TypeScript are excluded. There is no persistent metric gate.
+The latest Go check measured 30 production functions: maximum statement-coverage CRAP 3.000, none above 4, and 89.4% statement coverage. The calculation uses cyclomatic complexity and Go statement coverage across cmd/, internal/ and web/embed.go; tests, generated files, third-party dependencies and TypeScript are excluded. There is no persistent metric gate.
 
 ```powershell
 # While the built Go server is running:
@@ -71,7 +71,7 @@ cd web
 npm.cmd run smoke
 ```
 
-This is an explicit manual smoke check of the running API, original screenshot delivery and routing, with bounded request timeouts. It is outside normal verification and uses no test runner. The existing in-memory Go checks can be run with `go test ./internal/... ./web`; process helpers and logging are checked in memory without opening listeners or registering signal handlers. Frontend compilation includes strict TypeScript checks.
+This is an explicit manual smoke check of the running API, original screenshot delivery and routing, with bounded request timeouts. It is outside normal verification and uses no test runner. The existing in-memory Go checks can be run with `go test ./cmd/... ./internal/... ./web`; exit handling, shutdown and logging are checked in memory without opening listeners or registering signal handlers. Frontend compilation includes strict TypeScript checks.
 
 ## Publishing content
 

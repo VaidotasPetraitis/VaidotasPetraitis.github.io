@@ -14,12 +14,3 @@ func JSON(w http.ResponseWriter, status int, value any) {
 func Error(w http.ResponseWriter, status int, code, message string) {
 	JSON(w, status, map[string]any{"error": map[string]string{"code": code, "message": message}})
 }
-
-func Get(w http.ResponseWriter, r *http.Request) bool {
-	if r.Method == http.MethodGet {
-		return true
-	}
-	w.Header().Set("Allow", http.MethodGet)
-	Error(w, http.StatusMethodNotAllowed, "method_not_allowed", "Method not allowed.")
-	return false
-}
