@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
-import type { Project } from '../../shared/models';
+import type { Project } from './schema';
 
 export function Gallery({
   screenshots,

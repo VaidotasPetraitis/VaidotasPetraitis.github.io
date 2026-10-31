@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Icon } from '../../shared/Icons';
-import type { Project } from '../../shared/models';
+import { Icon } from '../../icons/Icons';
+import type { Project } from './schema';
 import {
   BypassConnector,
   FeedbackConnector,

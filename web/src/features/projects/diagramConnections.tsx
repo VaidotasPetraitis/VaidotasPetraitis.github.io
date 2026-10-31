@@ -1,4 +1,4 @@
-import type { Project } from '../../shared/models';
+import type { Project } from './schema';
 
 type Connection = Project['diagram']['connections'][number];
 type ConnectorProps = {

@@ -1,22 +1,59 @@
 import { ArrowUpRight } from 'lucide-react';
-import type { Project, ProjectCategory } from '../../shared/models';
-import { Icon } from '../../shared/Icons';
+import { projectSchema, type Project } from './schema';
+import type { ProjectCategory } from '../explorer/schema';
+import { Icon } from '../../icons/Icons';
 import { Diagram } from './Diagram';
 import { Gallery } from './Gallery';
-import { categoryLabel } from '../../shared/contract';
+import { useFetchData } from '../../http/useFetchData';
+import { ApiRequestStatus } from '../../http/ApiRequestStatus';
+import { Link } from '../../app/navigation';
 
 export function ProjectPage({
+  slug,
+  categories,
+  title,
+}: {
+  slug: string;
+  categories: ProjectCategory[];
+  title: string;
+}) {
+  const request = useFetchData(`/api/v1/projects/${slug}`, projectSchema);
+  const project = request.data;
+  if (request.error?.status === 404)
+    return (
+      <article>
+        <h1 tabIndex={-1}>Project not found</h1>
+        <p className="page-summary">That page is not part of this portfolio.</p>
+        <Link className="external-link" href="/">
+          Return to About
+        </Link>
+      </article>
+    );
+  if (!project)
+    return (
+      <>
+        <h1 tabIndex={-1}>{title}</h1>
+        <ApiRequestStatus {...request} label={title.toLowerCase()} />
+      </>
+    );
+
+  return <ProjectDetails project={project} categories={categories} />;
+}
+
+function ProjectDetails({
   project,
   categories,
 }: {
   project: Project;
   categories: ProjectCategory[];
 }) {
+  const categoryLabel =
+    categories.find((category) => category.id === project.category)?.label ?? project.category;
   return (
     <article className="project-page">
       <h1 tabIndex={-1}>{project.title}</h1>
       <p className="page-summary">{project.summary}</p>
-      <p className="sr-only">Category: {categoryLabel(categories, project.category)}</p>
+      <p className="sr-only">Category: {categoryLabel}</p>
       <ul className="technologies" aria-label="Technologies">
         {project.technologies.map((item) => (
           <li key={item}>{item}</li>

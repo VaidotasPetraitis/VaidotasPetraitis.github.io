@@ -1,7 +1,18 @@
-import type { Experience as Entry } from '../../shared/models';
-import { dateLabel } from '../../shared/dates';
+import { experienceSchema } from './schema';
+import { useFetchData } from '../../http/useFetchData';
+import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
-export function Experience({ entries }: { entries: Entry[] }) {
+export function Experience() {
+  const request = useFetchData('/api/v1/experience', experienceSchema);
+  const entries = request.data;
+  if (!entries)
+    return (
+      <>
+        <h1 tabIndex={-1}>Experience</h1>
+        <ApiRequestStatus {...request} label="experience" />
+      </>
+    );
+
   return (
     <article>
       <h1 tabIndex={-1}>Experience</h1>
@@ -14,12 +25,8 @@ export function Experience({ entries }: { entries: Entry[] }) {
                 <p className="employer">{entry.organization}</p>
               </div>
               <p className="dates">
-                <time dateTime={entry.start}>{dateLabel(entry.start, true)}</time> —{' '}
-                {entry.end ? (
-                  <time dateTime={entry.end}>{dateLabel(entry.end, true)}</time>
-                ) : (
-                  'Present'
-                )}
+                <time dateTime={entry.start}>{dateLabel(entry.start)}</time> —{' '}
+                {entry.end ? <time dateTime={entry.end}>{dateLabel(entry.end)}</time> : 'Present'}
               </p>
             </div>
             <p>{entry.description}</p>
@@ -35,4 +42,12 @@ export function Experience({ entries }: { entries: Entry[] }) {
       </div>
     </article>
   );
+}
+
+function dateLabel(date: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(date.length === 7 ? date + '-01T00:00:00Z' : date + 'T00:00:00Z'));
 }

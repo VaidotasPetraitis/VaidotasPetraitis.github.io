@@ -19,7 +19,7 @@ export default [
     },
   },
   {
-    files: ['manual/**/*.mjs', '*.config.js', '*.config.ts'],
+    files: ['*.config.js', '*.config.ts'],
     languageOptions: { globals: globals.node },
   },
   prettier,

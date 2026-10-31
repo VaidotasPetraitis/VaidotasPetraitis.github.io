@@ -1,8 +1,19 @@
-import type { Certification } from '../../shared/models';
-import { dateLabel } from '../../shared/dates';
+import { certificationsSchema, type Certification } from './schema';
 import { ArrowUpRight } from 'lucide-react';
+import { useFetchData } from '../../http/useFetchData';
+import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
-export function Certifications({ entries }: { entries: Certification[] }) {
+export function Certifications() {
+  const request = useFetchData('/api/v1/certifications', certificationsSchema);
+  const entries = request.data;
+  if (!entries)
+    return (
+      <>
+        <h1 tabIndex={-1}>Certifications</h1>
+        <ApiRequestStatus {...request} label="certifications" />
+      </>
+    );
+
   return (
     <article>
       <h1 tabIndex={-1}>Certifications</h1>
@@ -52,4 +63,13 @@ function CredentialMetadata({ entry }: { entry: Certification }) {
       {entry.description && <p className="credential-description">{entry.description}</p>}
     </>
   );
+}
+
+function dateLabel(date: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(date.length === 7 ? date + '-01T00:00:00Z' : date + 'T00:00:00Z'));
 }

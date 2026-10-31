@@ -2,13 +2,13 @@ package data_test
 
 import (
 	"io/fs"
-	"portfolio/internal/certifications"
 	"portfolio/internal/data"
-	"portfolio/internal/experience"
-	"portfolio/internal/explorer"
+	"portfolio/internal/features/certifications"
+	"portfolio/internal/features/experience"
+	"portfolio/internal/features/explorer"
+	"portfolio/internal/features/profile"
+	"portfolio/internal/features/projects"
 	"portfolio/internal/jsonfile"
-	"portfolio/internal/profile"
-	"portfolio/internal/projects"
 	"portfolio/web"
 	"slices"
 	"strings"
@@ -17,9 +17,8 @@ import (
 )
 
 func TestProfileContent(t *testing.T) {
-	var value profile.Profile
-	source := jsonfile.Reader{Files: data.Files}
-	if err := source.Read("profile.json", &value); err != nil {
+	value, err := jsonfile.Read[profile.Profile](data.Files, "profile.json")
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -30,9 +29,8 @@ func TestProfileContent(t *testing.T) {
 }
 
 func TestExperienceContent(t *testing.T) {
-	var entries []experience.Entry
-	source := jsonfile.Reader{Files: data.Files}
-	if err := source.Read("experience.json", &entries); err != nil {
+	entries, err := jsonfile.Read[[]experience.Entry](data.Files, "experience.json")
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -50,9 +48,8 @@ func TestExperienceContent(t *testing.T) {
 }
 
 func TestCertificationContent(t *testing.T) {
-	var entries []certifications.Entry
-	source := jsonfile.Reader{Files: data.Files}
-	if err := source.Read("certifications.json", &entries); err != nil {
+	entries, err := jsonfile.Read[[]certifications.Entry](data.Files, "certifications.json")
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -70,13 +67,12 @@ func TestCertificationContent(t *testing.T) {
 }
 
 func TestProjectContent(t *testing.T) {
-	var entries []projects.Project
-	var navigation explorer.Explorer
-	source := jsonfile.Reader{Files: data.Files}
-	if err := source.Read("projects.json", &entries); err != nil {
+	entries, err := jsonfile.Read[[]projects.Project](data.Files, "projects.json")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := source.Read("explorer.json", &navigation); err != nil {
+	navigation, err := jsonfile.Read[explorer.Explorer](data.Files, "explorer.json")
+	if err != nil {
 		t.Fatal(err)
 	}
 

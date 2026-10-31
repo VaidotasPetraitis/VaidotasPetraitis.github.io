@@ -1,7 +1,18 @@
-import { Icon } from '../../shared/Icons';
-import type { Profile } from '../../shared/models';
+import { Icon } from '../../icons/Icons';
+import type { Profile } from './schema';
+import type { FetchData } from '../../http/useFetchData';
+import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
-export function About({ profile }: { profile: Profile }) {
+export function About({ request }: { request: FetchData<Profile> }) {
+  const profile = request.data;
+  if (!profile)
+    return (
+      <>
+        <h1 tabIndex={-1}>About me</h1>
+        <ApiRequestStatus {...request} label="about me" />
+      </>
+    );
+
   return (
     <article className="about-page">
       <h1 tabIndex={-1}>About me</h1>

@@ -3,41 +3,39 @@ package httpserver
 import (
 	"io/fs"
 	"net/http"
-	"portfolio/internal/certifications"
-	"portfolio/internal/data"
-	"portfolio/internal/experience"
-	"portfolio/internal/explorer"
-	"portfolio/internal/httpserver/middleware"
-	"portfolio/internal/httpserver/response"
-	"portfolio/internal/jsonfile"
-	"portfolio/internal/profile"
-	"portfolio/internal/projects"
+	"portfolio/internal/api"
+	"portfolio/internal/features/certifications"
+	"portfolio/internal/features/experience"
+	"portfolio/internal/features/explorer"
+	"portfolio/internal/features/frontend"
+	"portfolio/internal/features/profile"
+	"portfolio/internal/features/projects"
 )
 
-func Handler(assets fs.FS) http.Handler {
-	content := jsonfile.Reader{Files: data.Files}
-	projectReader := projects.JSONReader{Source: content}
-	mux := http.NewServeMux()
+func Handler(assets, content fs.FS) http.Handler {
+	router := api.NewRouter()
 
-	mux.HandleFunc("GET /api/v1/profile", profile.Handler(profile.JSONReader{Source: content}))
-	mux.HandleFunc("GET /api/v1/experience", experience.Handler(experience.JSONReader{Source: content}))
-	mux.HandleFunc("GET /api/v1/projects", projects.ListHandler(projectReader))
-	mux.HandleFunc("GET /api/v1/projects/{slug}", projects.DetailHandler(projectReader))
-	mux.HandleFunc("GET /api/v1/explorer", explorer.Handler(explorer.JSONReader{Source: content}))
-	mux.HandleFunc("GET /api/v1/certifications", certifications.Handler(certifications.JSONReader{Source: content}))
-	mux.HandleFunc("GET /healthz", health)
+	router.GET("/api/v1/profile", profile.Handler(content))
+	router.GET("/api/v1/experience", experience.Handler(content))
+	router.GET("/api/v1/projects", projects.ListHandler(content))
+	router.GET("/api/v1/projects/{slug}", projects.DetailHandler(content))
+	router.GET("/api/v1/explorer", explorer.Handler(content))
+	router.GET("/api/v1/certifications", certifications.Handler(content))
+	router.GET("/healthz", health)
 
-	page := frontendPage(assets)
-	files := frontendFiles(assets)
-	mux.HandleFunc("GET /{$}", page)
-	mux.HandleFunc("GET /projects/{slug}", page)
-	mux.Handle("GET /assets/", files)
-	mux.Handle("GET /images/", files)
-	mux.Handle("GET /favicon.svg", files)
+	router.GET("/{$}", frontend.PageHandler(assets))
+	router.GET("/projects/{slug}", frontend.PageHandler(assets))
+	router.GET("/assets/", frontend.FilesHandler(assets))
+	router.GET("/images/", frontend.FilesHandler(assets))
+	router.GET("/favicon.svg", frontend.FilesHandler(assets))
 
-	return pipeline(mux, middleware.RequestLog, middleware.SecurityHeaders)
+	var pipeline Pipeline
+	pipeline.LogMiddleware()
+	pipeline.SecurityHeaders()
+
+	return pipeline.Handler(router)
 }
 
-func health(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+func health(c *api.Context) {
+	c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }

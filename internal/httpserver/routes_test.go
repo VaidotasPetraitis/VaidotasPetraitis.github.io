@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http/httptest"
+	"portfolio/internal/data"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -13,7 +14,7 @@ func TestRoutesServeExpectedResponses(t *testing.T) {
 		"images/real.png": {Data: []byte("png")},
 		"assets/main.js":  {Data: []byte("const ready=true")},
 	}
-	h := Handler(assets)
+	h := Handler(assets, data.Files)
 	tests := []struct {
 		method, path string
 		status       int
