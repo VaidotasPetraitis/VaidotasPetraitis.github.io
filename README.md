@@ -4,7 +4,7 @@ Go, React, TypeScript and Vite.
 
 ## Requirements
 
-- Go 1.26
+- Go 1.26.10 or newer (includes required security fixes)
 - Node.js 22.12+ and npm
 - PowerShell for the scripts below
 
