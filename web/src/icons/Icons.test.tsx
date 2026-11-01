@@ -12,6 +12,7 @@ it('renders brand, outline and fallback icons with accessible decoration semanti
       <Icon name="unknown" />
     </>,
   );
+
   expect(container.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(3);
   expect(container.querySelector('svg')?.getAttribute('width')).toBe('20');
 });

@@ -1,131 +1,25 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { NavLink, useLocation, useParams } from 'react-router';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
-import type { FetchData } from '../../http/useFetchData';
+import type { UseQueryResult } from '@tanstack/react-query';
+import type { APIError } from '../../http/api';
 import { Icon } from '../../icons/Icons';
 import type { ProjectCategory } from './schema';
 import type { ProjectSummary } from '../projects/schema';
-import { Link } from '../../app/navigation';
-import { routeKey, type Route } from '../../app/navigation';
 
-function Folder({
-  label,
-  open,
-  toggle,
-  children,
-}: {
-  label: string;
-  open: boolean;
-  toggle: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <div className="folder">
-      <button className="tree-row folder-button" aria-expanded={open} onClick={toggle}>
-        <Icon name={open ? 'down' : 'right'} size={15} className="chevron" />
-        <Icon name="folder" className="folder-icon" />
-        <span>{label}</span>
-      </button>
-      {open && <div className="tree-branch">{children}</div>}
-    </div>
-  );
-}
-function NavigationTree({
-  route,
-  projects,
-  projectGroups,
-  onSelect,
-}: {
-  route: Route;
+type ExplorerProps = {
   projects: ProjectSummary[];
-  projectGroups: ProjectCategory[];
-  onSelect: () => void;
-}) {
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
-    projects: true,
-    'software-engineering': true,
-    'applied-ai-engineering': true,
-  });
-  const activeRouteKey = routeKey(route);
-  const selectedCategory = projects.find((project) => project.slug === activeRouteKey)?.category;
-  useEffect(() => {
-    if (selectedCategory)
-      setExpandedFolders((current) => ({ ...current, projects: true, [selectedCategory]: true }));
-  }, [activeRouteKey, selectedCategory]);
-  const toggleFolder = (id: string) =>
-    setExpandedFolders((current) => ({ ...current, [id]: !current[id] }));
-  const renderNavigationItem = (id: string, label: string, icon: string, href: string) => (
-    <Link
-      className={`tree-row tree-link ${activeRouteKey === id ? 'selected' : ''}`}
-      href={href}
-      aria-current={activeRouteKey === id ? 'page' : undefined}
-      onClick={onSelect}
-    >
-      <Icon name={icon} />
-      <span>{label}</span>
-    </Link>
-  );
-  return (
-    <nav aria-label="Portfolio">
-      <h2 className="explorer-title">Portfolio Explorer</h2>
-      {renderNavigationItem('about', 'About', 'file', '/')}
-      {renderNavigationItem('experience', 'Experience', 'calendar', '/?section=experience')}
-      {projects.length > 0 && (
-        <Folder
-          label="Projects"
-          open={expandedFolders.projects}
-          toggle={() => toggleFolder('projects')}
-        >
-          {projectGroups.map((group) => {
-            const categoryProjects = projects.filter((project) => project.category === group.id);
-            return (
-              categoryProjects.length > 0 && (
-                <Folder
-                  key={group.id}
-                  label={group.label}
-                  open={expandedFolders[group.id]}
-                  toggle={() => toggleFolder(group.id)}
-                >
-                  {categoryProjects.map((project) => (
-                    <div key={project.slug}>
-                      {renderNavigationItem(
-                        project.slug,
-                        project.title,
-                        'file',
-                        `/projects/${project.slug}`,
-                      )}
-                    </div>
-                  ))}
-                </Folder>
-              )
-            );
-          })}
-        </Folder>
-      )}
-      {renderNavigationItem(
-        'certifications',
-        'Certifications',
-        'award',
-        '/?section=certifications',
-      )}
-    </nav>
-  );
-}
-
-export function Explorer({
-  route,
-  projects,
-  projectGroups,
-  title,
-  request,
-}: {
-  route: Route;
-  projects: ProjectSummary[];
-  projectGroups: ProjectCategory[];
+  projectGroups?: ProjectCategory[];
   title: string;
-  request: Pick<FetchData<unknown>, 'loading' | 'error' | 'retry'>;
-}) {
+  request: Pick<UseQueryResult<unknown, APIError>, 'isPending' | 'error' | 'refetch'>;
+};
+
+export function Explorer(props: ExplorerProps) {
+  const projectGroups = props.projectGroups ?? [];
+
   const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <aside className="explorer">
       <button
@@ -136,7 +30,7 @@ export function Explorer({
       >
         <span>
           <span>Browse portfolio</span>
-          <span className="mobile-current">{title}</span>
+          <span className="mobile-current">{props.title}</span>
         </span>
         <ChevronDown size={18} className={mobileOpen ? 'rotated' : ''} />
       </button>
@@ -145,13 +39,148 @@ export function Explorer({
         className={`explorer-content ${mobileOpen ? 'mobile-open' : ''}`}
       >
         <NavigationTree
-          route={route}
-          projects={projects}
+          projects={props.projects}
           projectGroups={projectGroups}
           onSelect={() => setMobileOpen(false)}
         />
-        <ApiRequestStatus {...request} label="project navigation" />
+        <ApiRequestStatus {...props.request} label="project navigation" />
       </div>
     </aside>
+  );
+}
+
+type FolderProps = {
+  label: string;
+  open: boolean;
+  toggle: () => void;
+  children: ReactNode;
+};
+
+function Folder(props: FolderProps) {
+  return (
+    <div className="folder">
+      <button className="tree-row folder-button" aria-expanded={props.open} onClick={props.toggle}>
+        <Icon name={props.open ? 'down' : 'right'} size={15} className="chevron" />
+        <Icon name="folder" className="folder-icon" />
+        <span>{props.label}</span>
+      </button>
+      {props.open && <div className="tree-branch">{props.children}</div>}
+    </div>
+  );
+}
+
+type NavigationTreeProps = {
+  projects: ProjectSummary[];
+  projectGroups: ProjectCategory[];
+  onSelect: () => void;
+};
+
+function NavigationTree(props: NavigationTreeProps) {
+  const params = useParams();
+  const location = useLocation();
+  const [expandedFolders, setExpandedFolders] = useState<Partial<Record<string, boolean>>>({
+    projects: true,
+    'software-engineering': true,
+    'applied-ai-engineering': true,
+  });
+  const activeRouteKey = params.slug ?? location.pathname;
+  const selectedCategory = props.projects.find(
+    (project) => project.slug === activeRouteKey,
+  )?.category;
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setExpandedFolders((current) => ({ ...current, projects: true, [selectedCategory]: true }));
+    }
+  }, [activeRouteKey, selectedCategory]);
+
+  const toggleFolder = (id: string) =>
+    setExpandedFolders((current) => ({ ...current, [id]: !current[id] }));
+
+  return (
+    <nav aria-label="Portfolio">
+      <h2 className="explorer-title">Portfolio Explorer</h2>
+      <NavigationLink label="About" icon="file" to="/" onSelect={props.onSelect} />
+      <NavigationLink
+        label="Experience"
+        icon="calendar"
+        to="/experience"
+        onSelect={props.onSelect}
+      />
+      {props.projects.length > 0 && (
+        <Folder
+          label="Projects"
+          open={Boolean(expandedFolders.projects)}
+          toggle={() => toggleFolder('projects')}
+        >
+          {props.projectGroups.map((group) => (
+            <ProjectGroup
+              key={group.id}
+              label={group.label}
+              projects={props.projects.filter((project) => project.category === group.id)}
+              open={Boolean(expandedFolders[group.id])}
+              toggle={() => toggleFolder(group.id)}
+              onSelect={props.onSelect}
+            />
+          ))}
+        </Folder>
+      )}
+      <NavigationLink
+        label="Certifications"
+        icon="award"
+        to="/certifications"
+        onSelect={props.onSelect}
+      />
+    </nav>
+  );
+}
+
+type NavigationLinkProps = {
+  label: string;
+  icon: string;
+  to: string;
+  onSelect: () => void;
+};
+
+function NavigationLink(props: NavigationLinkProps) {
+  return (
+    <NavLink
+      className={({ isActive }) => `tree-row tree-link ${isActive ? 'selected' : ''}`}
+      to={props.to}
+      end
+      caseSensitive
+      onClick={props.onSelect}
+    >
+      <Icon name={props.icon} />
+      <span>{props.label}</span>
+    </NavLink>
+  );
+}
+
+type ProjectGroupProps = {
+  label: string;
+  projects: ProjectSummary[];
+  open: boolean;
+  toggle: () => void;
+  onSelect: () => void;
+};
+
+function ProjectGroup(props: ProjectGroupProps) {
+  if (props.projects.length === 0) {
+    return null;
+  }
+
+  return (
+    <Folder label={props.label} open={props.open} toggle={props.toggle}>
+      {props.projects.map((project) => (
+        <NavigationLink
+          key={project.slug}
+          label={project.title}
+          icon="file"
+          to={`/projects/${encodeURIComponent(project.slug)}`}
+          onSelect={props.onSelect}
+        />
+      ))}
+    </Folder>
   );
 }

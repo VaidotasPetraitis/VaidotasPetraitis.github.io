@@ -23,4 +23,19 @@ export default [
     languageOptions: { globals: globals.node },
   },
   prettier,
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      curly: ['error', 'all'],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+        { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+        { blankLine: 'always', prev: '*', next: 'return' },
+        { blankLine: 'always', prev: 'block-like', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'block-like' },
+        { blankLine: 'always', prev: 'multiline-expression', next: '*' },
+      ],
+    },
+  },
 ];

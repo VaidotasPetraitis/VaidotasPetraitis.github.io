@@ -39,6 +39,12 @@ func TestRoutesServeExpectedResponses(t *testing.T) {
 		contentType  string
 	}{
 		{"GET", "/", 200, "text/html"},
+		{"GET", "/experience", 200, "text/html"},
+		{"GET", "/certifications", 200, "text/html"},
+		{"GET", "/not-found", 200, "text/html"},
+		{"HEAD", "/experience", 200, "text/html"},
+		{"POST", "/certifications", 405, "text/plain"},
+		{"GET", "/experience/extra", 404, "text/plain"},
 		{"GET", "/?section=experience", 200, "text/html"},
 		{"GET", "/projects/shell-in-go", 200, "text/html"},
 		{"GET", "/projects/missing", 200, "text/html"},

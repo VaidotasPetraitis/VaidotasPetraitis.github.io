@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const text = z.string().min(1);
+
 export const explorerSchema = z.object({
   categories: z.array(z.object({ id: text, label: text })),
   diagramIcons: z.array(text),

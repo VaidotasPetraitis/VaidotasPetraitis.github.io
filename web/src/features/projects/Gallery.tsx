@@ -1,27 +1,26 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import type { Project } from './schema';
 
-export function Gallery({
-  screenshots,
-  columns,
-}: {
+type GalleryProps = {
   screenshots: Project['screenshots'];
   columns: number;
-}) {
+};
+
+export function Gallery(props: GalleryProps) {
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const screenshotCount = screenshots.length;
+  const screenshotCount = props.screenshots.length;
 
-  const showNextScreenshot = useCallback(() => {
+  function showNextScreenshot() {
     setSelectedScreenshotIndex((currentIndex) => (currentIndex + 1) % screenshotCount);
-  }, [screenshotCount]);
+  }
 
-  const showPreviousScreenshot = useCallback(() => {
+  function showPreviousScreenshot() {
     setSelectedScreenshotIndex(
       (currentIndex) => (currentIndex - 1 + screenshotCount) % screenshotCount,
     );
-  }, [screenshotCount]);
+  }
 
   function openScreenshot(screenshotIndex: number) {
     setSelectedScreenshotIndex(screenshotIndex);
@@ -33,28 +32,32 @@ export function Gallery({
   }
 
   function closeOnBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) closeScreenshot();
+    if (event.target === event.currentTarget) {
+      closeScreenshot();
+    }
   }
 
-  useEffect(() => {
-    const handleGalleryKey = (event: KeyboardEvent) => {
-      if (!dialogRef.current?.open) return;
-      const actions: Record<string, () => void> = {
-        ArrowRight: showNextScreenshot,
-        ArrowLeft: showPreviousScreenshot,
-      };
-      actions[event.key]?.();
-    };
-    document.addEventListener('keydown', handleGalleryKey);
-    return () => document.removeEventListener('keydown', handleGalleryKey);
-  }, [showNextScreenshot, showPreviousScreenshot]);
-  if (screenshotCount === 0) return null;
-  const selectedScreenshot = screenshots[selectedScreenshotIndex];
+  function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
+    if (event.key === 'ArrowRight') {
+      showNextScreenshot();
+    }
+
+    if (event.key === 'ArrowLeft') {
+      showPreviousScreenshot();
+    }
+  }
+
+  if (screenshotCount === 0) {
+    return null;
+  }
+
+  const selectedScreenshot = props.screenshots[selectedScreenshotIndex];
+
   return (
     <section className="gallery-section">
       <h2>Screenshots</h2>
-      <div className={`gallery gallery-${columns}`}>
-        {screenshots.map((screenshot, screenshotIndex) => (
+      <div className={`gallery gallery-${props.columns}`}>
+        {props.screenshots.map((screenshot, screenshotIndex) => (
           <figure key={screenshot.path}>
             <button
               className="screenshot-button"
@@ -78,6 +81,7 @@ export function Gallery({
         className="image-dialog"
         aria-label="Project screenshot"
         onClick={closeOnBackdropClick}
+        onKeyDown={handleKeyDown}
       >
         <div className="lightbox-header">
           <p>{selectedScreenshot.caption}</p>

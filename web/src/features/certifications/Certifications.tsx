@@ -1,22 +1,25 @@
 import { certificationsSchema, type Certification } from './schema';
 import { ArrowUpRight } from 'lucide-react';
-import { useFetchData } from '../../http/useFetchData';
+import { useQuery } from '@tanstack/react-query';
+import { apiQuery } from '../../http/api';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
 export function Certifications() {
-  const request = useFetchData('/api/v1/certifications', certificationsSchema);
+  const request = useQuery(apiQuery('/api/v1/certifications', certificationsSchema));
   const entries = request.data;
-  if (!entries)
+
+  if (!entries) {
     return (
       <>
-        <h1 tabIndex={-1}>Certifications</h1>
+        <h1>Certifications</h1>
         <ApiRequestStatus {...request} label="certifications" />
       </>
     );
+  }
 
   return (
     <article>
-      <h1 tabIndex={-1}>Certifications</h1>
+      <h1>Certifications</h1>
       <div className="credentials">
         {entries.map((entry) => (
           <Credential key={entry.id} entry={entry} />
@@ -26,15 +29,24 @@ export function Certifications() {
   );
 }
 
-function Credential({ entry }: { entry: Certification }) {
+type CredentialProps = {
+  entry: Certification;
+};
+
+function Credential(props: CredentialProps) {
   return (
     <section className="credential">
-      <h2>{entry.title}</h2>
-      <p className="issuer">{entry.issuer}</p>
-      <CredentialDate entry={entry} />
-      <CredentialMetadata entry={entry} />
-      <a className="external-link" href={entry.url} target="_blank" rel="noopener noreferrer">
-        View {entry.issuer === 'Microsoft' ? 'Microsoft' : 'Credly'} credential
+      <h2>{props.entry.title}</h2>
+      <p className="issuer">{props.entry.issuer}</p>
+      <CredentialDate entry={props.entry} />
+      {props.entry.credentialId && (
+        <p className="credential-id">Credential ID: {props.entry.credentialId}</p>
+      )}
+      {props.entry.description && (
+        <p className="credential-description">{props.entry.description}</p>
+      )}
+      <a className="external-link" href={props.entry.url} target="_blank" rel="noopener noreferrer">
+        View {props.entry.issuer === 'Microsoft' ? 'Microsoft' : 'Credly'} credential
         <ArrowUpRight size={15} aria-hidden="true" />
         <span className="sr-only"> (opens in a new tab)</span>
       </a>
@@ -42,30 +54,25 @@ function Credential({ entry }: { entry: Certification }) {
   );
 }
 
-function CredentialDate({ entry }: { entry: Certification }) {
+type CredentialDateProps = {
+  entry: Certification;
+};
+
+function CredentialDate(props: CredentialDateProps) {
   return (
     <p className="credential-date">
-      Issued <time dateTime={entry.issued}>{dateLabel(entry.issued)}</time>
-      {entry.expiry && (
+      Issued <time dateTime={props.entry.issued}>{formatDate(props.entry.issued)}</time>
+      {props.entry.expiry && (
         <>
           {' '}
-          · Expires <time dateTime={entry.expiry}>{dateLabel(entry.expiry)}</time>
+          · Expires <time dateTime={props.entry.expiry}>{formatDate(props.entry.expiry)}</time>
         </>
       )}
     </p>
   );
 }
 
-function CredentialMetadata({ entry }: { entry: Certification }) {
-  return (
-    <>
-      {entry.credentialId && <p className="credential-id">Credential ID: {entry.credentialId}</p>}
-      {entry.description && <p className="credential-description">{entry.description}</p>}
-    </>
-  );
-}
-
-function dateLabel(date: string) {
+function formatDate(date: string) {
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'long',

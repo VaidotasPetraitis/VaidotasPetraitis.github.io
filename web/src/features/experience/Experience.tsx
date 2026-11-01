@@ -1,50 +1,67 @@
-import { experienceSchema } from './schema';
-import { useFetchData } from '../../http/useFetchData';
+import { experienceSchema, type Experience as ExperienceRecord } from './schema';
+import { useQuery } from '@tanstack/react-query';
+import { apiQuery } from '../../http/api';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
 export function Experience() {
-  const request = useFetchData('/api/v1/experience', experienceSchema);
+  const request = useQuery(apiQuery('/api/v1/experience', experienceSchema));
   const entries = request.data;
-  if (!entries)
+
+  if (!entries) {
     return (
       <>
-        <h1 tabIndex={-1}>Experience</h1>
+        <h1>Experience</h1>
         <ApiRequestStatus {...request} label="experience" />
       </>
     );
+  }
 
   return (
     <article>
-      <h1 tabIndex={-1}>Experience</h1>
+      <h1>Experience</h1>
       <div className="timeline">
         {entries.map((entry) => (
-          <section className="timeline-entry" key={entry.id}>
-            <div className="role-heading">
-              <div>
-                <h2>{entry.role}</h2>
-                <p className="employer">{entry.organization}</p>
-              </div>
-              <p className="dates">
-                <time dateTime={entry.start}>{dateLabel(entry.start)}</time> —{' '}
-                {entry.end ? <time dateTime={entry.end}>{dateLabel(entry.end)}</time> : 'Present'}
-              </p>
-            </div>
-            <p>{entry.description}</p>
-            {entry.highlights.length > 0 && (
-              <ul className="highlights">
-                {entry.highlights.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <ExperienceEntry key={entry.id} entry={entry} />
         ))}
       </div>
     </article>
   );
 }
 
-function dateLabel(date: string) {
+type ExperienceEntryProps = {
+  entry: ExperienceRecord;
+};
+
+function ExperienceEntry(props: ExperienceEntryProps) {
+  return (
+    <section className="timeline-entry">
+      <div className="role-heading">
+        <div>
+          <h2>{props.entry.role}</h2>
+          <p className="employer">{props.entry.organization}</p>
+        </div>
+        <p className="dates">
+          <time dateTime={props.entry.start}>{formatDate(props.entry.start)}</time> —{' '}
+          {props.entry.end ? (
+            <time dateTime={props.entry.end}>{formatDate(props.entry.end)}</time>
+          ) : (
+            'Present'
+          )}
+        </p>
+      </div>
+      <p>{props.entry.description}</p>
+      {props.entry.highlights.length > 0 && (
+        <ul className="highlights">
+          {props.entry.highlights.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function formatDate(date: string) {
   return new Intl.DateTimeFormat('en-GB', {
     month: 'short',
     year: 'numeric',

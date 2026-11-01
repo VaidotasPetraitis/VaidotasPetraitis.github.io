@@ -38,6 +38,19 @@ npm.cmd run dev
 
 Open http://127.0.0.1:5173. Restart Go after JSON content changes. Rebuild the frontend and executable for production updates.
 
+Frontend navigation uses React Router. `web/src/main.tsx` provides the browser
+router, and `web/src/app/App.tsx` defines the page routes. Internal links use
+React Router's `Link` component with a `to` prop; `NavLink` handles selected
+navigation styling. Pages use `/`, `/experience`, `/certifications`, and
+`/projects/:slug`, with navigation without reloads and browser Back/Forward.
+Old `?section=...` bookmarks redirect to the corresponding page.
+
+TanStack Query manages API request state and caching. `web/src/main.tsx` provides
+the query client, with data kept fresh for five minutes and failures retried using
+the UI's Try again button. Components call `useQuery(apiQuery(url, schema))`;
+`web/src/http/api.ts` fetches JSON and validates it with Zod. React's `<title>`
+element sets the document title.
+
 ## Checks and formatting
 
 ```powershell

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const text = z.string().min(1);
+
 export const summarySchema = z.object({
   slug: text,
   title: text,

@@ -1,21 +1,28 @@
 import { Icon } from '../../icons/Icons';
 import type { Profile } from './schema';
-import type { FetchData } from '../../http/useFetchData';
+import type { UseQueryResult } from '@tanstack/react-query';
+import type { APIError } from '../../http/api';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
 
-export function About({ request }: { request: FetchData<Profile> }) {
-  const profile = request.data;
-  if (!profile)
+type AboutProps = {
+  request: UseQueryResult<Profile, APIError>;
+};
+
+export function About(props: AboutProps) {
+  const profile = props.request.data;
+
+  if (!profile) {
     return (
       <>
-        <h1 tabIndex={-1}>About me</h1>
-        <ApiRequestStatus {...request} label="about me" />
+        <h1>About me</h1>
+        <ApiRequestStatus {...props.request} label="about me" />
       </>
     );
+  }
 
   return (
     <article className="about-page">
-      <h1 tabIndex={-1}>About me</h1>
+      <h1>About me</h1>
       <p className="page-summary">{profile.role}</p>
       <div className="biography">
         {profile.biography.map((text) => (

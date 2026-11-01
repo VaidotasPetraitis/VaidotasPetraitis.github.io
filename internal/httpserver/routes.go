@@ -25,6 +25,9 @@ func Handler(assets, content fs.FS) http.Handler {
 	router.HandleFunc("GET /healthz", health)
 
 	router.HandleFunc("GET /{$}", frontend.PageHandler(assets))
+	router.HandleFunc("GET /experience", frontend.PageHandler(assets))
+	router.HandleFunc("GET /certifications", frontend.PageHandler(assets))
+	router.HandleFunc("GET /not-found", frontend.PageHandler(assets))
 	router.HandleFunc("GET /projects/{slug}", frontend.PageHandler(assets))
 	router.HandleFunc("GET /assets/", frontend.FilesHandler(assets))
 	router.HandleFunc("GET /images/", frontend.FilesHandler(assets))

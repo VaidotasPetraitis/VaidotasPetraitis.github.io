@@ -1,19 +1,39 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
-import { useFetchData, type FetchData } from '../http/useFetchData';
+import { useEffect, useRef } from 'react';
+import {
+  Link,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+  useParams,
+  useSearchParams,
+} from 'react-router';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { apiQuery, type APIError } from '../http/api';
 import { ProfileHeader } from '../features/profile/ProfileHeader';
 import { About } from '../features/profile/About';
-import { profileSchema, type Profile } from '../features/profile/schema';
+import { profileSchema } from '../features/profile/schema';
 import { Experience } from '../features/experience/Experience';
 import { Certifications } from '../features/certifications/Certifications';
 import { ProjectPage } from '../features/projects/ProjectPage';
-import { summariesSchema, type ProjectSummary } from '../features/projects/schema';
-import { Explorer } from '../features/explorer/Explorer';
 import {
-  explorerSchema,
-  type ProjectCategory,
-  type Explorer as ExplorerData,
-} from '../features/explorer/schema';
-import { Link, routeKey, useRoute, type Route } from './navigation';
+  projectSchema,
+  summariesSchema,
+  type Project,
+  type ProjectSummary,
+} from '../features/projects/schema';
+import { Explorer } from '../features/explorer/Explorer';
+import { explorerSchema } from '../features/explorer/schema';
+
+type Section = 'about' | 'experience' | 'certifications';
+type Page = Section | 'project' | 'not-found';
+
+const legacyPaths = new Map([
+  ['about', '/'],
+  ['experience', '/experience'],
+  ['certifications', '/certifications'],
+]);
 
 const sectionTitles = {
   about: 'About me',
@@ -22,128 +42,88 @@ const sectionTitles = {
   'not-found': 'Page not found',
 };
 
-type PageHeading = { routeKey: string; title: string };
+export default function App() {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-function pageTitle(route: Route, projects: ProjectSummary[] | undefined) {
-  if (route.kind !== 'project') return sectionTitles[route.kind];
-  return projectTitle(route.slug, projects ?? []);
-}
+  if (location.pathname === '/' && searchParams.has('section')) {
+    return <Navigate to={legacyPaths.get(searchParams.get('section')!) ?? '/not-found'} replace />;
+  }
 
-function projectTitle(slug: string, projects: ProjectSummary[]) {
-  const project = projects.find((project) => project.slug === slug);
-  return project?.title ?? 'Project';
-}
-
-function projectCategories(explorer: ExplorerData | undefined) {
-  return explorer?.categories ?? [];
-}
-
-function currentTitle(key: string, heading: PageHeading, fallback: string) {
-  if (heading.routeKey !== key) return fallback;
-  return heading.title || fallback;
-}
-
-function focusPage(
-  main: HTMLElement,
-  heading: HTMLElement,
-  key: string,
-  previous: RefObject<string>,
-) {
-  if (previous.current === key) return;
-  if (main.querySelector('[role="status"]')) return;
-  heading.focus({ preventScroll: true });
-  previous.current = key;
-}
-
-function keepPageHeading(current: PageHeading, next: PageHeading) {
-  if (current.routeKey !== next.routeKey) return next;
-  return current.title === next.title ? current : next;
-}
-
-function PageNotFound() {
   return (
-    <article>
-      <h1 tabIndex={-1}>Page not found</h1>
-      <p className="page-summary">That page is not part of this portfolio.</p>
-      <Link className="external-link" href="/">
-        Return to About
-      </Link>
-    </article>
+    <Routes>
+      <Route path="/" element={<Portfolio page="about" />} />
+      <Route path="/experience" caseSensitive element={<Portfolio page="experience" />} />
+      <Route path="/certifications" caseSensitive element={<Portfolio page="certifications" />} />
+      <Route path="/projects/:slug" caseSensitive element={<Portfolio page="project" />} />
+      <Route path="*" element={<Portfolio page="not-found" />} />
+    </Routes>
   );
 }
 
-function Page({
-  route,
-  profile,
-  categories,
-  title,
-}: {
-  route: Route;
-  profile: FetchData<Profile>;
-  categories: ProjectCategory[];
-  title: string;
-}) {
-  if (route.kind === 'project')
-    return <ProjectPage slug={route.slug} categories={categories} title={title} />;
+type PortfolioProps = {
+  page: Page;
+};
+
+function Portfolio(props: PortfolioProps) {
+  const location = useLocation();
+  const params = useParams();
+  const navigationType = useNavigationType();
+  const page = props.page;
+  const currentKey = location.pathname + location.search;
+  const profile = useQuery(apiQuery('/api/v1/profile', profileSchema));
+  const explorer = useQuery(apiQuery('/api/v1/explorer', explorerSchema));
+  const projects = useQuery(apiQuery('/api/v1/projects', summariesSchema));
+  const project = useQuery({
+    ...apiQuery(`/api/v1/projects/${encodeURIComponent(String(params.slug))}`, projectSchema),
+    enabled: page === 'project',
+  });
+  const title = getPageTitle(page, params.slug, projects.data, project);
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPage = useRef(currentKey);
+  const navigationStatus = explorer.data ? projects : explorer;
+  const explorerContent = explorer.data ?? { categories: [] };
+
+  useEffect(() => {
+    if (previousPage.current === currentKey) {
+      return;
+    }
+
+    mainRef.current?.focus({ preventScroll: true });
+    previousPage.current = currentKey;
+
+    if (navigationType !== 'POP') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [currentKey, navigationType]);
+
   const pages = {
     about: <About request={profile} />,
     experience: <Experience />,
     certifications: <Certifications />,
+    project: (
+      <ProjectPage request={project} categories={explorerContent.categories} title={title} />
+    ),
     'not-found': <PageNotFound />,
   };
-  return pages[route.kind];
-}
-
-export default function App() {
-  const route = useRoute();
-  const currentKey = routeKey(route);
-  const profile = useFetchData('/api/v1/profile', profileSchema);
-  const explorer = useFetchData('/api/v1/explorer', explorerSchema);
-  const projects = useFetchData('/api/v1/projects', summariesSchema);
-  const mainRef = useRef<HTMLElement>(null);
-  const previousRoute = useRef(currentKey);
-  const [pageHeading, setPageHeading] = useState({ routeKey: currentKey, title: '' });
-  const fallbackTitle = pageTitle(route, projects.data);
-  const title = currentTitle(currentKey, pageHeading, fallbackTitle);
-  const navigationStatus = explorer.data ? projects : explorer;
-  const categories = projectCategories(explorer.data);
-
-  useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-    const updatePageHeading = () => {
-      const heading = main.querySelector<HTMLElement>('h1');
-      if (!heading) return;
-      const headingTitle = heading.textContent || fallbackTitle;
-      document.title = `${headingTitle} \u00b7 Vaidotas Petraitis`;
-      setPageHeading((current) =>
-        keepPageHeading(current, { routeKey: currentKey, title: headingTitle }),
-      );
-      focusPage(main, heading, currentKey, previousRoute);
-    };
-    updatePageHeading();
-    const observer = new MutationObserver(updatePageHeading);
-    observer.observe(main, { childList: true, subtree: true, characterData: true });
-    return () => observer.disconnect();
-  }, [currentKey, fallbackTitle]);
 
   return (
     <div className="site">
+      <title>{`${title} · Vaidotas Petraitis`}</title>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>
       <ProfileHeader profile={profile.data} />
       <div className="layout">
         <Explorer
-          route={route}
           projects={projects.data ?? []}
-          projectGroups={categories}
+          projectGroups={explorerContent.categories}
           title={title}
           request={navigationStatus}
         />
-        <main id="main-content" ref={mainRef} className="main-content">
+        <main id="main-content" ref={mainRef} className="main-content" tabIndex={-1}>
           <div key={currentKey} className="page-content">
-            <Page route={route} profile={profile} categories={categories} title={fallbackTitle} />
+            {pages[page]}
           </div>
         </main>
       </div>
@@ -152,4 +132,43 @@ export default function App() {
       </footer>
     </div>
   );
+}
+
+function PageNotFound() {
+  return (
+    <article>
+      <h1>Page not found</h1>
+      <p className="page-summary">That page is not part of this portfolio.</p>
+      <Link className="external-link" to="/">
+        Return to About
+      </Link>
+    </article>
+  );
+}
+
+function getPageTitle(
+  page: Page,
+  slug: string | undefined,
+  projects: ProjectSummary[] | undefined,
+  project: UseQueryResult<Project, APIError>,
+) {
+  if (page !== 'project') {
+    return sectionTitles[page];
+  }
+
+  const summary = projects?.find((project) => project.slug === slug);
+
+  return getProjectTitle(project, summary ? summary.title : 'Project');
+}
+
+function getProjectTitle(request: UseQueryResult<Project, APIError>, fallback: string) {
+  if (request.error?.status === 404) {
+    return 'Project not found';
+  }
+
+  if (request.data) {
+    return request.data.title;
+  }
+
+  return fallback;
 }
