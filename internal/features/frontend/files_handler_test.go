@@ -1,12 +1,11 @@
 package frontend
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"testing/fstest"
-
-	"portfolio/internal/api"
 )
 
 func TestFilesHandlerServesStaticFiles(t *testing.T) {
@@ -15,10 +14,10 @@ func TestFilesHandlerServesStaticFiles(t *testing.T) {
 		"images/portrait.png": {Data: []byte("png")},
 		"favicon.svg":         {Data: []byte("<svg></svg>")},
 	}
-	router := api.NewRouter()
-	router.GET("/assets/", FilesHandler(files))
-	router.GET("/images/", FilesHandler(files))
-	router.GET("/favicon.svg", FilesHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /assets/", FilesHandler(files))
+	router.HandleFunc("GET /images/", FilesHandler(files))
+	router.HandleFunc("GET /favicon.svg", FilesHandler(files))
 	for _, test := range []struct{ path, body, contentType string }{
 		{"/assets/main.js", "const ready=true", "javascript"},
 		{"/images/portrait.png", "png", "image/png"},
@@ -39,8 +38,8 @@ func TestFilesHandlerServesStaticFiles(t *testing.T) {
 
 func TestFilesHandlerDoesNotListDirectoriesOrServeIndexFiles(t *testing.T) {
 	files := fstest.MapFS{"images/index.html": {Data: []byte("private index")}}
-	router := api.NewRouter()
-	router.GET("/images/", FilesHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /images/", FilesHandler(files))
 	for _, path := range []string{"/images/", "/images/missing.png"} {
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, httptest.NewRequest("GET", path, nil))
@@ -51,8 +50,8 @@ func TestFilesHandlerDoesNotListDirectoriesOrServeIndexFiles(t *testing.T) {
 }
 
 func TestFilesHandlerSupportsHEADAndRanges(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/assets/", FilesHandler(fstest.MapFS{"assets/main.js": {Data: []byte("const ready=true")}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /assets/", FilesHandler(fstest.MapFS{"assets/main.js": {Data: []byte("const ready=true")}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("HEAD", "/assets/main.js", nil))
 	if response.Code != 200 || response.Body.Len() != 0 {

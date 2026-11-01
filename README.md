@@ -48,3 +48,25 @@ Open http://127.0.0.1:5173. Restart Go after JSON content changes. Rebuild the f
 Run frontend tests separately from `web/` with `npm.cmd test`.
 
 Run Go tests from the repository root with `go test . ./internal/... ./web`.
+
+## Logging
+
+The executable writes structured JSON logs to stderr using Go's `log/slog`.
+Each record includes `time`, `level`, and `msg`. Server lifecycle events and
+HTTP server diagnostics use the same logger.
+
+Handlers log JSON read/decode failures with the filename and underlying cause.
+The `jsonio.EncodeAndWrite` helper logs encoding and write failures. Client responses
+contain safe messages using `{"error":{"message":"..."}}`.
+
+Successful requests and request completion are not logged. The middleware pipeline
+adds security headers; it does not forward errors or log requests.
+
+## HTTP handlers
+
+Routes use `http.ServeMux`, and feature handlers return `http.HandlerFunc`.
+Handlers call `jsonio.EncodeAndWrite` for data or `jsonio.Error` for a public error
+message. JSON file helpers return descriptive errors for handlers to log.
+
+The `internal/jsonio` package contains `ReadAndDecode` in `file.go` and HTTP
+response helpers `EncodeAndWrite` and `Error` in `http.go`.

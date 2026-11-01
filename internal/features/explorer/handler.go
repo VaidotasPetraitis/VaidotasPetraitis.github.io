@@ -5,18 +5,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"portfolio/internal/api"
-	"portfolio/internal/jsonfile"
+	"portfolio/internal/jsonio"
 )
 
-func Handler(files fs.FS) api.Handler {
-	return func(c *api.Context) {
-		explorer, err := jsonfile.Read[Explorer](files, "explorer.json")
+func Handler(files fs.FS) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		explorer, err := jsonio.ReadAndDecode[Explorer](files, "explorer.json")
 		if err != nil {
-			slog.Error("load explorer", "error", err)
-			c.Error(http.StatusInternalServerError, "Unable to load explorer.")
+			slog.ErrorContext(r.Context(), "load explorer failed", "error", err)
+			jsonio.Error(w, r, http.StatusInternalServerError, "Unable to load explorer.")
 			return
 		}
-		c.JSON(http.StatusOK, explorer)
+		jsonio.EncodeAndWrite(w, r, http.StatusOK, explorer)
 	}
 }

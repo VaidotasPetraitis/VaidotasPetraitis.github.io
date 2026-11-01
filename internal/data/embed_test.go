@@ -8,7 +8,7 @@ import (
 	"portfolio/internal/features/explorer"
 	"portfolio/internal/features/profile"
 	"portfolio/internal/features/projects"
-	"portfolio/internal/jsonfile"
+	"portfolio/internal/jsonio"
 	"portfolio/web"
 	"slices"
 	"strings"
@@ -17,7 +17,7 @@ import (
 )
 
 func TestProfileContent(t *testing.T) {
-	value, err := jsonfile.Read[profile.Profile](data.Files, "profile.json")
+	value, err := jsonio.ReadAndDecode[profile.Profile](data.Files, "profile.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestProfileContent(t *testing.T) {
 }
 
 func TestExperienceContent(t *testing.T) {
-	entries, err := jsonfile.Read[[]experience.Entry](data.Files, "experience.json")
+	entries, err := jsonio.ReadAndDecode[[]experience.Entry](data.Files, "experience.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestExperienceContent(t *testing.T) {
 }
 
 func TestCertificationContent(t *testing.T) {
-	entries, err := jsonfile.Read[[]certifications.Entry](data.Files, "certifications.json")
+	entries, err := jsonio.ReadAndDecode[[]certifications.Entry](data.Files, "certifications.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,11 +67,11 @@ func TestCertificationContent(t *testing.T) {
 }
 
 func TestProjectContent(t *testing.T) {
-	entries, err := jsonfile.Read[[]projects.Project](data.Files, "projects.json")
+	entries, err := jsonio.ReadAndDecode[[]projects.Project](data.Files, "projects.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	navigation, err := jsonfile.Read[explorer.Explorer](data.Files, "explorer.json")
+	navigation, err := jsonio.ReadAndDecode[explorer.Explorer](data.Files, "explorer.json")
 	if err != nil {
 		t.Fatal(err)
 	}

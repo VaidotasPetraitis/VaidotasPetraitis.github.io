@@ -6,18 +6,16 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-
-	"portfolio/internal/api"
 )
 
-func PageHandler(files fs.FS) api.Handler {
-	return func(c *api.Context) {
+func PageHandler(files fs.FS) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := fs.ReadFile(files, "index.html")
 		if err != nil {
-			slog.Error("load frontend page", "error", err)
-			http.Error(c.Writer, "Frontend build unavailable", http.StatusInternalServerError)
+			slog.ErrorContext(r.Context(), "load frontend page failed", "error", err)
+			http.Error(w, "Frontend build unavailable", http.StatusInternalServerError)
 			return
 		}
-		http.ServeContent(c.Writer, c.Request, "index.html", time.Time{}, bytes.NewReader(page))
+		http.ServeContent(w, r, "index.html", time.Time{}, bytes.NewReader(page))
 	}
 }

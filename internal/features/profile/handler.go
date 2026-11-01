@@ -5,18 +5,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"portfolio/internal/api"
-	"portfolio/internal/jsonfile"
+	"portfolio/internal/jsonio"
 )
 
-func Handler(files fs.FS) api.Handler {
-	return func(c *api.Context) {
-		profile, err := jsonfile.Read[Profile](files, "profile.json")
+func Handler(files fs.FS) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		profile, err := jsonio.ReadAndDecode[Profile](files, "profile.json")
 		if err != nil {
-			slog.Error("load profile", "error", err)
-			c.Error(http.StatusInternalServerError, "Unable to load profile.")
+			slog.ErrorContext(r.Context(), "load profile failed", "error", err)
+			jsonio.Error(w, r, http.StatusInternalServerError, "Unable to load profile.")
 			return
 		}
-		c.JSON(http.StatusOK, profile)
+		jsonio.EncodeAndWrite(w, r, http.StatusOK, profile)
 	}
 }

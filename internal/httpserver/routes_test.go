@@ -1,12 +1,30 @@
 package httpserver
 
 import (
+	"bytes"
+	"log/slog"
 	"net/http/httptest"
 	"portfolio/internal/data"
 	"strings"
 	"testing"
 	"testing/fstest"
 )
+
+func TestSuccessfulRequestDoesNotLog(t *testing.T) {
+	var logs bytes.Buffer
+	original := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(original) })
+	handler := Handler(fstest.MapFS{}, data.Files)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/api/v1/profile", nil))
+	if response.Code != 200 {
+		t.Fatalf("status = %d, want 200", response.Code)
+	}
+	if logs.Len() != 0 {
+		t.Fatalf("successful request produced logs: %s", logs.String())
+	}
+}
 
 func TestRoutesServeExpectedResponses(t *testing.T) {
 	assets := fstest.MapFS{

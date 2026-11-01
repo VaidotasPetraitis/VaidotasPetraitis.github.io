@@ -4,23 +4,21 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
-
-	"portfolio/internal/api"
 )
 
-func FilesHandler(files fs.FS) api.Handler {
+func FilesHandler(files fs.FS) http.HandlerFunc {
 	fileServer := http.FileServerFS(files)
-	return func(c *api.Context) {
-		name := strings.TrimPrefix(c.Request.URL.Path, "/")
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimPrefix(r.URL.Path, "/")
 		info, err := fs.Stat(files, name)
 		if err != nil {
-			http.NotFound(c.Writer, c.Request)
+			http.NotFound(w, r)
 			return
 		}
 		if info.IsDir() {
-			http.NotFound(c.Writer, c.Request)
+			http.NotFound(w, r)
 			return
 		}
-		fileServer.ServeHTTP(c.Writer, c.Request)
+		fileServer.ServeHTTP(w, r)
 	}
 }

@@ -5,18 +5,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"portfolio/internal/api"
-	"portfolio/internal/jsonfile"
+	"portfolio/internal/jsonio"
 )
 
-func Handler(files fs.FS) api.Handler {
-	return func(c *api.Context) {
-		entries, err := jsonfile.Read[[]Entry](files, "experience.json")
+func Handler(files fs.FS) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries, err := jsonio.ReadAndDecode[[]Entry](files, "experience.json")
 		if err != nil {
-			slog.Error("load experience", "error", err)
-			c.Error(http.StatusInternalServerError, "Unable to load experience.")
+			slog.ErrorContext(r.Context(), "load experience failed", "error", err)
+			jsonio.Error(w, r, http.StatusInternalServerError, "Unable to load experience.")
 			return
 		}
-		c.JSON(http.StatusOK, entries)
+		jsonio.EncodeAndWrite(w, r, http.StatusOK, entries)
 	}
 }

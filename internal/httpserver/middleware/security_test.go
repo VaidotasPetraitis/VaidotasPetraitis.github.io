@@ -15,7 +15,7 @@ func TestSecurityHeadersRunBeforeHandler(t *testing.T) {
 	})
 	recorder := httptest.NewRecorder()
 
-	SecurityHeaders(endpoint).ServeHTTP(recorder, httptest.NewRequest("GET", "/", nil))
+	securityHeaders(endpoint).ServeHTTP(recorder, httptest.NewRequest("GET", "/", nil))
 
 	if recorder.Code != 204 {
 		t.Fatalf("status = %d, want 204", recorder.Code)

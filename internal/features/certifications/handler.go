@@ -5,18 +5,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"portfolio/internal/api"
-	"portfolio/internal/jsonfile"
+	"portfolio/internal/jsonio"
 )
 
-func Handler(files fs.FS) api.Handler {
-	return func(c *api.Context) {
-		entries, err := jsonfile.Read[[]Entry](files, "certifications.json")
+func Handler(files fs.FS) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries, err := jsonio.ReadAndDecode[[]Entry](files, "certifications.json")
 		if err != nil {
-			slog.Error("load certifications", "error", err)
-			c.Error(http.StatusInternalServerError, "Unable to load certifications.")
+			slog.ErrorContext(r.Context(), "load certifications failed", "error", err)
+			jsonio.Error(w, r, http.StatusInternalServerError, "Unable to load certifications.")
 			return
 		}
-		c.JSON(http.StatusOK, entries)
+		jsonio.EncodeAndWrite(w, r, http.StatusOK, entries)
 	}
 }

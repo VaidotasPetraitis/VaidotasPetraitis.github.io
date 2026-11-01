@@ -1,4 +1,4 @@
-package jsonfile
+package jsonio
 
 import (
 	"encoding/json"
@@ -9,10 +9,10 @@ import (
 	"testing/fstest"
 )
 
-func TestReadFreshJSON(t *testing.T) {
+func TestReadAndDecodeFreshJSON(t *testing.T) {
 	type content struct{ Name string }
 	files := fstest.MapFS{"content.json": {Data: []byte(`{"name":"Before"}`)}}
-	value, err := Read[content](files, "content.json")
+	value, err := ReadAndDecode[content](files, "content.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func TestReadFreshJSON(t *testing.T) {
 		t.Fatalf("unexpected content: %+v", value)
 	}
 	files["content.json"] = &fstest.MapFile{Data: []byte(`{"name":"After"}`)}
-	value, err = Read[content](files, "content.json")
+	value, err = ReadAndDecode[content](files, "content.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,8 +29,8 @@ func TestReadFreshJSON(t *testing.T) {
 	}
 }
 
-func TestReadReportsMissingFile(t *testing.T) {
-	_, err := Read[any](fstest.MapFS{}, "missing.json")
+func TestReadAndDecodeReportsMissingFile(t *testing.T) {
+	_, err := ReadAndDecode[any](fstest.MapFS{}, "missing.json")
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("error = %v, want file-not-found", err)
 	}
@@ -39,9 +39,9 @@ func TestReadReportsMissingFile(t *testing.T) {
 	}
 }
 
-func TestReadReportsInvalidJSON(t *testing.T) {
+func TestReadAndDecodeReportsInvalidJSON(t *testing.T) {
 	files := fstest.MapFS{"invalid.json": {Data: []byte(`{`)}}
-	_, err := Read[any](files, "invalid.json")
+	_, err := ReadAndDecode[any](files, "invalid.json")
 	var syntax *json.SyntaxError
 	if !errors.As(err, &syntax) {
 		t.Fatalf("error = %v, want JSON syntax error", err)
@@ -51,9 +51,9 @@ func TestReadReportsInvalidJSON(t *testing.T) {
 	}
 }
 
-func TestReadRejectsWrongJSONType(t *testing.T) {
+func TestReadAndDecodeRejectsWrongJSONType(t *testing.T) {
 	files := fstest.MapFS{"content.json": {Data: []byte(`{"name":42}`)}}
-	_, err := Read[struct{ Name string }](files, "content.json")
+	_, err := ReadAndDecode[struct{ Name string }](files, "content.json")
 	var typeError *json.UnmarshalTypeError
 	if !errors.As(err, &typeError) {
 		t.Fatalf("error = %v, want JSON type error", err)

@@ -1,4 +1,4 @@
-package api
+package jsonio
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ import (
 	"testing"
 )
 
-func TestJSONResponse(t *testing.T) {
+func TestEncodeAndWriteJSONResponse(t *testing.T) {
 	response := httptest.NewRecorder()
-	c := Context{Writer: response, Request: httptest.NewRequest("GET", "/", nil)}
-	c.JSON(http.StatusCreated, map[string]string{"name": "Ada"})
+	request := httptest.NewRequest("GET", "/", nil)
+	EncodeAndWrite(response, request, http.StatusCreated, map[string]string{"name": "Ada"})
 	if response.Code != http.StatusCreated {
 		t.Fatalf("status = %d, want 201", response.Code)
 	}
@@ -32,8 +32,8 @@ func TestJSONResponse(t *testing.T) {
 
 func TestErrorResponseContainsOnlyPublicMessage(t *testing.T) {
 	response := httptest.NewRecorder()
-	c := Context{Writer: response, Request: httptest.NewRequest("GET", "/", nil)}
-	c.Error(http.StatusNotFound, "Project not found.")
+	request := httptest.NewRequest("GET", "/", nil)
+	Error(response, request, http.StatusNotFound, "Project not found.")
 	if response.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404", response.Code)
 	}
@@ -47,9 +47,13 @@ func TestErrorResponseContainsOnlyPublicMessage(t *testing.T) {
 }
 
 func TestEncodingFailureReturnsJSON500BeforeCommittingStatus(t *testing.T) {
+	var logs bytes.Buffer
+	original := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(original) })
 	response := httptest.NewRecorder()
-	c := Context{Writer: response, Request: httptest.NewRequest("GET", "/", nil)}
-	c.JSON(http.StatusCreated, make(chan int))
+	request := httptest.NewRequest("GET", "/", nil)
+	EncodeAndWrite(response, request, http.StatusCreated, make(chan int))
 	if response.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want 500", response.Code)
 	}
@@ -60,26 +64,36 @@ func TestEncodingFailureReturnsJSON500BeforeCommittingStatus(t *testing.T) {
 	if body.Error.Message != "Unable to encode response." {
 		t.Fatalf("unexpected encoding error: %q", body.Error.Message)
 	}
+	if !strings.Contains(logs.String(), "encode response failed") {
+		t.Fatalf("encoding failure was not logged: %s", logs.String())
+	}
 }
 
 type disconnectedWriter struct {
-	header http.Header
+	header  http.Header
+	headers int
+	writes  int
 }
 
 func (w *disconnectedWriter) Header() http.Header { return w.header }
-func (w *disconnectedWriter) WriteHeader(int)     {}
+func (w *disconnectedWriter) WriteHeader(int)     { w.headers++ }
 func (w *disconnectedWriter) Write([]byte) (int, error) {
+	w.writes++
 	return 0, errors.New("client disconnected")
 }
 
 func TestResponseWriteFailureIsLogged(t *testing.T) {
 	var logs bytes.Buffer
 	original := slog.Default()
-	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logs, nil)))
 	t.Cleanup(func() { slog.SetDefault(original) })
-	c := Context{Writer: &disconnectedWriter{header: make(http.Header)}}
-	c.JSON(http.StatusOK, "ok")
+	writer := &disconnectedWriter{header: make(http.Header)}
+	request := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	EncodeAndWrite(writer, request, http.StatusOK, "ok")
 	if !strings.Contains(logs.String(), "client disconnected") {
 		t.Fatalf("write failure was not logged: %s", logs.String())
+	}
+	if writer.writes != 1 || writer.headers != 1 {
+		t.Fatalf("response was retried: %d headers, %d writes", writer.headers, writer.writes)
 	}
 }

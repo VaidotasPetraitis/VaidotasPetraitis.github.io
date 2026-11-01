@@ -1,17 +1,21 @@
 package profile
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
+	"log/slog"
+	"net/http"
 	"net/http/httptest"
-	"portfolio/internal/api"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
 
 func TestHandlerReturnsProfile(t *testing.T) {
 	files := fstest.MapFS{"profile.json": {Data: []byte(`{"name":"Ada"}`)}}
-	router := api.NewRouter()
-	router.GET("/", Handler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(files))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -29,8 +33,8 @@ func TestHandlerReturnsProfile(t *testing.T) {
 }
 
 func TestHandlerReportsReadFailure(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", Handler(fstest.MapFS{}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(fstest.MapFS{}))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -41,8 +45,12 @@ func TestHandlerReportsReadFailure(t *testing.T) {
 }
 
 func TestHandlerReportsInvalidJSON(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", Handler(fstest.MapFS{"profile.json": {Data: []byte(`{`)}}))
+	var logs bytes.Buffer
+	original := slog.Default()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(original) })
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(fstest.MapFS{"profile.json": {Data: []byte(`{`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	if response.Code != 500 {
@@ -54,5 +62,19 @@ func TestHandlerReportsInvalidJSON(t *testing.T) {
 	}
 	if body.Error.Message != "Unable to load profile." {
 		t.Fatalf("unexpected public error: %q", body.Error.Message)
+	}
+	decoder := json.NewDecoder(&logs)
+	var record struct {
+		Level string `json:"level"`
+		Error string `json:"error"`
+	}
+	if err := decoder.Decode(&record); err != nil {
+		t.Fatal(err)
+	}
+	if record.Level != "ERROR" || !strings.Contains(record.Error, `decode "profile.json"`) {
+		t.Fatalf("unexpected error log: %+v", record)
+	}
+	if err := decoder.Decode(&record); err != io.EOF {
+		t.Fatalf("expected one error log, got %v", err)
 	}
 }

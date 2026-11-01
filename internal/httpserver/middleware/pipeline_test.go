@@ -1,4 +1,4 @@
-package httpserver
+package middleware
 
 import (
 	"net/http"
@@ -28,10 +28,8 @@ func TestPipelineRunsMiddlewareInRegistrationOrder(t *testing.T) {
 	})
 
 	mux := http.NewServeMux()
-	var pipeline Pipeline
+	pipeline := Pipeline{steps: []middleware{first, second}}
 	mux.Handle("GET /", endpoint)
-	pipeline.Use(first)
-	pipeline.Use(second)
 	pipeline.Handler(mux).ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/", nil))
 
 	want := "first in, second in, endpoint, second out, first out"
@@ -50,7 +48,6 @@ func TestPipelineMiddlewareAppliesToAllRoutes(t *testing.T) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 	mux.HandleFunc("GET /before", endpoint)
-	pipeline.LogMiddleware()
 	pipeline.SecurityHeaders()
 	mux.Handle("GET /after", http.HandlerFunc(endpoint))
 	handler := pipeline.Handler(mux)

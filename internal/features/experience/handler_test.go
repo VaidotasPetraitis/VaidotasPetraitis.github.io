@@ -2,16 +2,16 @@ package experience
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
-	"portfolio/internal/api"
 	"testing"
 	"testing/fstest"
 )
 
 func TestHandlerReturnsExperience(t *testing.T) {
 	files := fstest.MapFS{"experience.json": {Data: []byte(`[{"id":"engineer"}]`)}}
-	router := api.NewRouter()
-	router.GET("/", Handler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(files))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -29,8 +29,8 @@ func TestHandlerReturnsExperience(t *testing.T) {
 }
 
 func TestHandlerReportsReadFailure(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", Handler(fstest.MapFS{}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(fstest.MapFS{}))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -41,8 +41,8 @@ func TestHandlerReportsReadFailure(t *testing.T) {
 }
 
 func TestHandlerReportsInvalidJSON(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", Handler(fstest.MapFS{"experience.json": {Data: []byte(`{`)}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(fstest.MapFS{"experience.json": {Data: []byte(`{`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	if response.Code != 500 {
@@ -59,8 +59,8 @@ func TestHandlerReportsInvalidJSON(t *testing.T) {
 
 func TestHandlerPreservesArrayOrder(t *testing.T) {
 	files := fstest.MapFS{"experience.json": {Data: []byte(`[{"id":"first","order":2},{"id":"second","order":0}]`)}}
-	router := api.NewRouter()
-	router.GET("/", Handler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", Handler(files))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	var entries []Entry

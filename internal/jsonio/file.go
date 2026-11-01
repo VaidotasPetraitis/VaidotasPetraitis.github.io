@@ -1,4 +1,4 @@
-package jsonfile
+package jsonio
 
 import (
 	"encoding/json"
@@ -6,7 +6,8 @@ import (
 	"io/fs"
 )
 
-func Read[T any](files fs.FS, filename string) (T, error) {
+// ReadAndDecode reads a JSON file and decodes its contents into T.
+func ReadAndDecode[T any](files fs.FS, filename string) (T, error) {
 	var value T
 	content, err := fs.ReadFile(files, filename)
 	if err != nil {

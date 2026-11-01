@@ -2,16 +2,16 @@ package projects
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
-	"portfolio/internal/api"
 	"testing"
 	"testing/fstest"
 )
 
 func TestListHandlerReturnsSummaries(t *testing.T) {
 	files := fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"quiz","title":"Quiz","capabilities":["Play"]}]`)}}
-	router := api.NewRouter()
-	router.GET("/", ListHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", ListHandler(files))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -32,8 +32,8 @@ func TestListHandlerReturnsSummaries(t *testing.T) {
 }
 
 func TestListHandlerReportsReadFailure(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", ListHandler(fstest.MapFS{}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", ListHandler(fstest.MapFS{}))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
@@ -45,8 +45,8 @@ func TestListHandlerReportsReadFailure(t *testing.T) {
 
 func TestListHandlerPreservesJSONOrder(t *testing.T) {
 	files := fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"first","order":2},{"slug":"second","order":0}]`)}}
-	router := api.NewRouter()
-	router.GET("/", ListHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", ListHandler(files))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	var summaries []Summary
@@ -59,8 +59,8 @@ func TestListHandlerPreservesJSONOrder(t *testing.T) {
 }
 
 func TestListHandlerReturnsEmptyArray(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", ListHandler(fstest.MapFS{"projects.json": {Data: []byte(`[]`)}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", ListHandler(fstest.MapFS{"projects.json": {Data: []byte(`[]`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	if response.Code != 200 || response.Body.String() != "[]" {
@@ -69,8 +69,8 @@ func TestListHandlerReturnsEmptyArray(t *testing.T) {
 }
 
 func TestListHandlerReportsInvalidJSON(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/", ListHandler(fstest.MapFS{"projects.json": {Data: []byte(`{`)}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /", ListHandler(fstest.MapFS{"projects.json": {Data: []byte(`{`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/", nil))
 	if response.Code != 500 || response.Body.String() != `{"error":{"message":"Unable to load projects."}}` {

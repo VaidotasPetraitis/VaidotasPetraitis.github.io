@@ -15,6 +15,7 @@ func ServeHTTP(handler http.Handler, address string) error {
 	httpServer := &http.Server{
 		Addr:              address,
 		Handler:           handler,
+		ErrorLog:          slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
@@ -31,11 +32,14 @@ func ServeHTTP(handler http.Handler, address string) error {
 		shutdownServer(httpServer)
 	})
 
-	slog.Info("starting portfolio", "address", address)
+	slog.Info("server starting", "address", address)
 	listenError := httpServer.ListenAndServe()
 
 	requestShutdown()
 	shutdown.Wait()
+	if listenError == http.ErrServerClosed {
+		slog.Info("server stopped")
+	}
 	return listenError
 }
 
@@ -45,6 +49,6 @@ func shutdownServer(httpServer *http.Server) {
 	defer cancelDeadline()
 
 	if err := httpServer.Shutdown(shutdownDeadline); err != nil {
-		slog.Error("shutdown", "error", err)
+		slog.Error("server shutdown failed", "error", err)
 	}
 }

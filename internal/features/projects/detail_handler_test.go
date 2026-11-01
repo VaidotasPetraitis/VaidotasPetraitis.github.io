@@ -2,16 +2,16 @@ package projects
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
-	"portfolio/internal/api"
 	"testing"
 	"testing/fstest"
 )
 
 func TestDetailHandlerReturnsSelectedProject(t *testing.T) {
 	files := fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"shell","title":"Shell"},{"slug":"quiz","title":"Quiz"}]`)}}
-	router := api.NewRouter()
-	router.GET("/projects/{slug}", DetailHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /projects/{slug}", DetailHandler(files))
 	request := httptest.NewRequest("GET", "/projects/quiz", nil)
 	response := httptest.NewRecorder()
 
@@ -31,8 +31,8 @@ func TestDetailHandlerReturnsSelectedProject(t *testing.T) {
 
 func TestDetailHandlerReportsUnknownProject(t *testing.T) {
 	files := fstest.MapFS{"projects.json": {Data: []byte(`[]`)}}
-	router := api.NewRouter()
-	router.GET("/projects/{slug}", DetailHandler(files))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /projects/{slug}", DetailHandler(files))
 	request := httptest.NewRequest("GET", "/projects/quiz", nil)
 	response := httptest.NewRecorder()
 
@@ -44,8 +44,8 @@ func TestDetailHandlerReportsUnknownProject(t *testing.T) {
 }
 
 func TestDetailHandlerReportsReadFailure(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/projects/{slug}", DetailHandler(fstest.MapFS{}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /projects/{slug}", DetailHandler(fstest.MapFS{}))
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/projects/quiz", nil))
@@ -56,8 +56,8 @@ func TestDetailHandlerReportsReadFailure(t *testing.T) {
 }
 
 func TestDetailHandlerReportsInvalidJSON(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/projects/{slug}", DetailHandler(fstest.MapFS{"projects.json": {Data: []byte(`{`)}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /projects/{slug}", DetailHandler(fstest.MapFS{"projects.json": {Data: []byte(`{`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/projects/quiz", nil))
 	if response.Code != 500 || response.Body.String() != `{"error":{"message":"Unable to load projects."}}` {
@@ -66,8 +66,8 @@ func TestDetailHandlerReportsInvalidJSON(t *testing.T) {
 }
 
 func TestDetailHandlerReportsUnknownSlugInNonemptyContent(t *testing.T) {
-	router := api.NewRouter()
-	router.GET("/projects/{slug}", DetailHandler(fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"quiz"}]`)}}))
+	router := http.NewServeMux()
+	router.HandleFunc("GET /projects/{slug}", DetailHandler(fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"quiz"}]`)}}))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest("GET", "/projects/missing", nil))
 	if response.Code != 404 || response.Body.String() != `{"error":{"message":"Project not found."}}` {
