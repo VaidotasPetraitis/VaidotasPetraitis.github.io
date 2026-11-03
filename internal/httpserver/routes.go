@@ -33,10 +33,7 @@ func Handler(assets, content fs.FS) http.Handler {
 	router.HandleFunc("GET /images/", frontend.FilesHandler(assets))
 	router.HandleFunc("GET /favicon.svg", frontend.FilesHandler(assets))
 
-	var pipeline middleware.Pipeline
-	pipeline.SecurityHeaders()
-
-	return pipeline.Handler(router)
+	return middleware.SecurityHeaders(router)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

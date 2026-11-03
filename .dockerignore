@@ -1,0 +1,14 @@
+.git
+.agents
+.codex
+.aws
+.azure
+**/node_modules
+**/dist
+**/coverage
+bin
+**/*.log
+**/.env
+**/.env.*
+**/*.pem
+**/*.key

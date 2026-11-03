@@ -8,5 +8,4 @@ type Entry struct {
 	End          string   `json:"end,omitempty"`
 	Description  string   `json:"description"`
 	Highlights   []string `json:"highlights"`
-	Order        int      `json:"order"`
 }

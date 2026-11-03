@@ -1,10 +1,10 @@
-import { experienceSchema, type Experience as ExperienceRecord } from './schema';
-import { useQuery } from '@tanstack/react-query';
-import { apiQuery } from '../../http/api';
+import { type Experience as ExperienceRecord } from './schema';
+import { getExperience } from './service';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
+import { useRequest } from '../../http/useRequest';
 
 export function Experience() {
-  const request = useQuery(apiQuery('/api/v1/experience', experienceSchema));
+  const request = useRequest(getExperience);
   const entries = request.data;
 
   if (!entries) {

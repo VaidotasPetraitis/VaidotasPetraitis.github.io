@@ -11,7 +11,6 @@ export const experienceSchema = z.array(
     end: text.optional(),
     description: text,
     highlights: z.array(text),
-    order: z.number(),
   }),
 );
 export type Experience = z.infer<typeof experienceSchema>[number];

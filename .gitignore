@@ -2,3 +2,14 @@ web/node_modules/
 web/dist/
 bin/
 *.log
+coverage/
+
+.env
+.env.*
+!.env.example
+.aws/
+.azure/
+*.pem
+*.key
+*.pfx
+*.p12

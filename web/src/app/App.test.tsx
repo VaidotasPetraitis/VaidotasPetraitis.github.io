@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { BrowserRouter } from 'react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StrictMode } from 'react';
 import App from './App';
 import profile from '../../../internal/data/profile.json';
 import experience from '../../../internal/data/experience.json';
@@ -9,15 +9,11 @@ import certifications from '../../../internal/data/certifications.json';
 import projects from '../../../internal/data/projects.json';
 import explorer from '../../../internal/data/explorer.json';
 
-let client: QueryClient;
-
 function renderApp() {
   return render(
-    <QueryClientProvider client={client}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>,
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>,
   );
 }
 
@@ -30,10 +26,6 @@ const content: Record<string, unknown> = {
 };
 
 beforeEach(() => {
-  client = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: 5 * 60 * 1000 } },
-  });
-
   window.history.replaceState(null, '', '/');
   window.scrollTo = vi.fn();
   vi.stubGlobal(
@@ -64,7 +56,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-  client.clear();
   vi.unstubAllGlobals();
 });
 
@@ -74,7 +65,7 @@ it('renders About and only fetches layout data initially', async () => {
   expect(document.title).toBe('About me · Vaidotas Petraitis');
   const urls = vi.mocked(fetch).mock.calls.map(([url]) => url);
 
-  expect(urls).toEqual(['/api/v1/profile', '/api/v1/explorer', '/api/v1/projects']);
+  expect(urls.sort()).toEqual(['/api/v1/explorer', '/api/v1/profile', '/api/v1/projects']);
   const portrait = screen.getByRole('img', { name: profile.portraitAlt });
 
   expect(portrait.getAttribute('src')).toBe(profile.portrait);
@@ -203,7 +194,7 @@ it('uses the loaded project title even when project summaries fail', async () =>
   );
 
   expect(
-    screen.getByRole('button', { name: /^Browse portfolio\s*Quiz from project details$/ }),
+    await screen.findByRole('button', { name: /^Browse portfolio\s*Quiz from project details$/ }),
   ).toBeTruthy();
 });
 
@@ -223,7 +214,7 @@ it('uses the project not-found title even when its summary exists', async () => 
   await screen.findByRole('heading', { name: 'Project not found' });
   await waitFor(() => expect(document.title).toBe('Project not found · Vaidotas Petraitis'));
   expect(
-    screen.getByRole('button', { name: /^Browse portfolio\s*Project not found$/ }),
+    await screen.findByRole('button', { name: /^Browse portfolio\s*Project not found$/ }),
   ).toBeTruthy();
 });
 
@@ -253,9 +244,13 @@ it('shows loading and error feedback and retries the profile', async () => {
   const stub = vi.mocked(fetch);
   const normalFetch = stub.getMockImplementation()!;
 
-  stub.mockImplementationOnce(async () =>
-    Response.json({ error: { message: 'Temporarily unavailable' } }, { status: 503 }),
-  );
+  stub.mockImplementation(async (url) => {
+    if (url === '/api/v1/profile') {
+      return Response.json({ error: { message: 'Temporarily unavailable' } }, { status: 503 });
+    }
+
+    return normalFetch(url);
+  });
 
   renderApp();
   const main = screen.getByRole('main');
@@ -340,4 +335,95 @@ it.each([
       .getByRole('link', { name: section === 'about' ? 'About' : title })
       .getAttribute('aria-current'),
   ).toBe('page');
+});
+
+it.each([
+  ['/experience', '/api/v1/experience', experience[0].role],
+  ['/certifications', '/api/v1/certifications', certifications[0].title],
+  ['/projects/quiz', '/api/v1/projects/quiz', 'Core capabilities'],
+])('retries failed content on %s', async (path, endpoint, heading) => {
+  const normalFetch = vi.mocked(fetch).getMockImplementation()!;
+  let failed = false;
+
+  vi.mocked(fetch).mockImplementation(async (url) => {
+    if (url === endpoint && !failed) {
+      failed = true;
+
+      return Response.json({ error: { message: 'Please retry' } }, { status: 503 });
+    }
+
+    return normalFetch(url);
+  });
+
+  window.history.replaceState(null, '', path);
+  renderApp();
+  const main = within(screen.getByRole('main'));
+
+  await main.findByText('Please retry');
+  fireEvent.click(main.getByRole('button', { name: 'Try again' }));
+  await main.findByRole('heading', { name: heading });
+});
+
+it('aborts an obsolete project request and ignores its late response', async () => {
+  const normalFetch = vi.mocked(fetch).getMockImplementation()!;
+  const nextProject = projects.find((project) => project.slug !== 'quiz')!;
+  const quiz = projects.find((project) => project.slug === 'quiz')!;
+  let finishQuiz!: (response: Response) => void;
+  let quizSignal!: AbortSignal;
+
+  vi.mocked(fetch).mockImplementation((url, options) => {
+    if (url === '/api/v1/projects/quiz') {
+      quizSignal = options!.signal as AbortSignal;
+
+      return new Promise<Response>((resolve) => {
+        finishQuiz = resolve;
+      });
+    }
+
+    return normalFetch(url);
+  });
+
+  window.history.replaceState(null, '', '/projects/quiz');
+  renderApp();
+  fireEvent.click(await screen.findByRole('link', { name: nextProject.title }));
+  await screen.findByRole('heading', { name: 'Core capabilities' });
+  expect(quizSignal.aborted).toBe(true);
+  expect(document.title).toBe(`${nextProject.title} · Vaidotas Petraitis`);
+  await act(async () => finishQuiz(Response.json(quiz)));
+  expect(document.title).toBe(`${nextProject.title} · Vaidotas Petraitis`);
+  expect(screen.getByRole('heading', { name: nextProject.title })).toBeTruthy();
+});
+
+it('cancels page and layout requests on unmount', async () => {
+  const signals: AbortSignal[] = [];
+
+  vi.mocked(fetch).mockImplementation((_url, options) => {
+    const signal = options!.signal as AbortSignal;
+
+    signals.push(signal);
+
+    return new Promise<Response>((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    });
+  });
+
+  window.history.replaceState(null, '', '/experience');
+  const view = renderApp();
+
+  expect(signals).toHaveLength(4);
+  await act(async () => view.unmount());
+  expect(signals.every((signal) => signal.aborted)).toBe(true);
+});
+
+it('loads successfully when StrictMode restarts mount effects', async () => {
+  render(
+    <StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </StrictMode>,
+  );
+
+  await screen.findByText(profile.role);
+  expect(screen.queryByRole('alert')).toBeNull();
 });

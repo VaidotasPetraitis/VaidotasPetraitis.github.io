@@ -6,8 +6,7 @@
     "issued": "2024-01-27",
     "credentialId": "9AEC3F2A35BA8FA4",
     "url": "https://learn.microsoft.com/en-us/users/vaidotaspetraitis-3242/credentials/9aec3f2a35ba8fa4",
-    "description": "Core data concepts, relational and non-relational data, and analytics workloads on Azure.",
-    "order": 0
+    "description": "Core data concepts, relational and non-relational data, and analytics workloads on Azure."
   },
   {
     "id": "decoded-engineering",
@@ -15,7 +14,6 @@
     "issuer": "Decoded",
     "issued": "2024-06-12",
     "url": "https://www.credly.com/badges/81d3758a-4b88-47a0-ba8d-63b096753033/linked_in_profile",
-    "description": "Completed the Software & Test Engineering Bootcamp through Aviva Foundry.",
-    "order": 1
+    "description": "Completed the Software & Test Engineering Bootcamp through Aviva Foundry."
   }
 ]

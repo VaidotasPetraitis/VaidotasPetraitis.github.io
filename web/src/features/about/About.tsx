@@ -1,11 +1,10 @@
 import { Icon } from '../../icons/Icons';
 import type { Profile } from './schema';
-import type { UseQueryResult } from '@tanstack/react-query';
-import type { APIError } from '../../http/api';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
+import type { RequestState } from '../../http/useRequest';
 
 type AboutProps = {
-  request: UseQueryResult<Profile, APIError>;
+  request: RequestState<Profile>;
 };
 
 export function About(props: AboutProps) {

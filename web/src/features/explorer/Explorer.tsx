@@ -2,23 +2,22 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { NavLink, useLocation, useParams } from 'react-router';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
-import type { UseQueryResult } from '@tanstack/react-query';
-import type { APIError } from '../../http/api';
+import type { RequestState } from '../../http/useRequest';
+import type { NavigationData } from './service';
 import { Icon } from '../../icons/Icons';
 import type { ProjectCategory } from './schema';
 import type { ProjectSummary } from '../projects/schema';
 
 type ExplorerProps = {
-  projects: ProjectSummary[];
-  projectGroups?: ProjectCategory[];
   title: string;
-  request: Pick<UseQueryResult<unknown, APIError>, 'isPending' | 'error' | 'refetch'>;
+  request: RequestState<NavigationData>;
 };
 
-export function Explorer(props: ExplorerProps) {
-  const projectGroups = props.projectGroups ?? [];
+const emptyNavigation: NavigationData = { projects: [], categories: [] };
 
+export function Explorer({ title, request }: ExplorerProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { projects, categories } = request.data ?? emptyNavigation;
 
   return (
     <aside className="explorer">
@@ -30,7 +29,7 @@ export function Explorer(props: ExplorerProps) {
       >
         <span>
           <span>Browse portfolio</span>
-          <span className="mobile-current">{props.title}</span>
+          <span className="mobile-current">{title}</span>
         </span>
         <ChevronDown size={18} className={mobileOpen ? 'rotated' : ''} />
       </button>
@@ -39,11 +38,11 @@ export function Explorer(props: ExplorerProps) {
         className={`explorer-content ${mobileOpen ? 'mobile-open' : ''}`}
       >
         <NavigationTree
-          projects={props.projects}
-          projectGroups={projectGroups}
+          projects={projects}
+          projectGroups={categories}
           onSelect={() => setMobileOpen(false)}
         />
-        <ApiRequestStatus {...props.request} label="project navigation" />
+        <ApiRequestStatus {...request} label="project navigation" />
       </div>
     </aside>
   );

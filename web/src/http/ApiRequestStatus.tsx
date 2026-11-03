@@ -1,30 +1,29 @@
-import type { UseQueryResult } from '@tanstack/react-query';
-import type { APIError } from './api';
+import type { ApiError } from './result';
 
-type ApiRequestStatusProps = Pick<
-  UseQueryResult<unknown, APIError>,
-  'isPending' | 'error' | 'refetch'
-> & {
+type ApiRequestStatusProps = {
+  loading: boolean;
+  error?: ApiError;
+  retry: () => void;
   label: string;
 };
 
-export function ApiRequestStatus(props: ApiRequestStatusProps) {
-  if (props.error) {
+export function ApiRequestStatus({ loading, error, retry, label }: ApiRequestStatusProps) {
+  if (loading) {
     return (
-      <div className="status error" role="alert">
-        <h2>Unable to load {props.label}</h2>
-        <p>{props.error.message}</p>
-        <button className="text-button" onClick={() => props.refetch()}>
-          Try again
-        </button>
+      <div className="status" role="status">
+        <span className="loading-dot" /> Loading {label}…
       </div>
     );
   }
 
-  if (props.isPending) {
+  if (error) {
     return (
-      <div className="status" role="status">
-        <span className="loading-dot" /> Loading {props.label}…
+      <div className="status error" role="alert">
+        <h2>Unable to load {label}</h2>
+        <p>{error.message}</p>
+        <button className="text-button" onClick={retry}>
+          Try again
+        </button>
       </div>
     );
   }

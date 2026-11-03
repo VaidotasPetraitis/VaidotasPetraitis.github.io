@@ -4,23 +4,45 @@ import type { ProjectCategory } from '../explorer/schema';
 import { Icon } from '../../icons/Icons';
 import { Diagram } from './Diagram';
 import { Gallery } from './Gallery';
-import type { UseQueryResult } from '@tanstack/react-query';
-import type { APIError } from '../../http/api';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
+import { useRequest } from '../../http/useRequest';
+import { useCallback, useEffect } from 'react';
+import { getProject } from './service';
 import { Link } from 'react-router';
 
 type ProjectPageProps = {
-  request: UseQueryResult<Project, APIError>;
+  slug: string;
   categories: ProjectCategory[];
-  title: string;
+  onTitleChange: (project: { slug: string; title: string }) => void;
 };
 
 export function ProjectPage(props: ProjectPageProps) {
-  const project = props.request.data;
+  const { slug, onTitleChange } = props;
+  const loadProject = useCallback((signal: AbortSignal) => getProject(slug, signal), [slug]);
+  const request = useRequest(loadProject);
+  const project = request.data;
+  const notFound = request.error?.status === 404;
 
-  if (props.request.error?.status === 404) {
+  useEffect(() => {
+    if (request.loading) {
+      return;
+    }
+
+    let title = 'Project';
+
+    if (project) {
+      title = project.title;
+    } else if (notFound) {
+      title = 'Project not found';
+    }
+
+    onTitleChange({ slug, title });
+  }, [request.loading, project, notFound, slug, onTitleChange]);
+
+  if (notFound) {
     return (
       <article>
+        <title>Project not found · Vaidotas Petraitis</title>
         <h1>Project not found</h1>
         <p className="page-summary">That page is not part of this portfolio.</p>
         <Link className="external-link" to="/">
@@ -33,13 +55,19 @@ export function ProjectPage(props: ProjectPageProps) {
   if (!project) {
     return (
       <>
-        <h1>{props.title}</h1>
-        <ApiRequestStatus {...props.request} label={props.title.toLowerCase()} />
+        <title>Project · Vaidotas Petraitis</title>
+        <h1>Project</h1>
+        <ApiRequestStatus {...request} label="project" />
       </>
     );
   }
 
-  return <ProjectDetails project={project} categories={props.categories} />;
+  return (
+    <>
+      <title>{`${project.title} · Vaidotas Petraitis`}</title>
+      <ProjectDetails project={project} categories={props.categories} />
+    </>
+  );
 }
 
 type ProjectDetailsProps = {

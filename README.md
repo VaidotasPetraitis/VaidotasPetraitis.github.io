@@ -21,6 +21,21 @@ Open http://127.0.0.1:8080. Set `PORTFOLIO_ADDR` to change the listen address.
 
 The frontend must be built before Go can compile. The executable embeds the built frontend and JSON content; production needs only the executable.
 
+## Containers and Azure
+
+Build the Linux container from the repository root with Docker Desktop running:
+
+```powershell
+docker build --platform linux/amd64 -t portfolio:local .
+docker run --rm --name portfolio-local -p 127.0.0.1:8080:8080 portfolio:local
+```
+
+The image builds and checks both frontend and backend, runs as a non-root user,
+and serves the whole website on port 8080. See [the Azure deployment guide](infra/README.md)
+for local verification, image publishing, and the Consumption plan Bicep template.
+The template uses 0.25 vCPU, 0.5 GiB RAM and zero to one replica. Nothing is
+deployed by building the image.
+
 ## Development
 
 After the first build, run Go from the repository root:
@@ -39,17 +54,26 @@ npm.cmd run dev
 Open http://127.0.0.1:5173. Restart Go after JSON content changes. Rebuild the frontend and executable for production updates.
 
 Frontend navigation uses React Router. `web/src/main.tsx` provides the browser
-router, and `web/src/app/App.tsx` defines the page routes. Internal links use
+router, and `web/src/app/App.tsx` defines the page routes. The shared layout and profile header
+live in `web/src/features/portfolio/`. The About page, profile service, and schema
+live in `web/src/features/about/`. Internal links use
 React Router's `Link` component with a `to` prop; `NavLink` handles selected
 navigation styling. Pages use `/`, `/experience`, `/certifications`, and
 `/projects/:slug`, with navigation without reloads and browser Back/Forward.
 Old `?section=...` bookmarks redirect to the corresponding page.
 
-TanStack Query manages API request state and caching. `web/src/main.tsx` provides
-the query client, with data kept fresh for five minutes and failures retried using
-the UI's Try again button. Components call `useQuery(apiQuery(url, schema))`;
-`web/src/http/api.ts` fetches JSON and validates it with Zod. React's `<title>`
-element sets the document title.
+Feature-owned async functions in `web/src/features/*/service.ts` supply endpoints and
+Zod schemas to `getJson`. Requests return a TypeScript result union:
+`{ ok: true, data }` or `{ ok: false, error }`. HTTP errors, connection failures,
+invalid responses, and cancellation are values; callers do not catch exceptions.
+
+Components use `useRequest(getExperience)` and similar calls for loading, data,
+errors, and retry. The hook owns request effects and cancellation. Effects depend
+on the request function and explicit retry attempts, not their returned data.
+The layout loads shared profile and navigation data, passes navigation state to
+Explorer, and derives project categories from the navigation response. ProjectPage
+owns project requests. Page content is fetched on mount without a client-side
+query cache. React's `<title>` element sets the document title.
 
 ## Checks and formatting
 
@@ -72,8 +96,8 @@ Handlers log JSON read/decode failures with the filename and underlying cause.
 The `jsonio.EncodeAndWrite` helper logs encoding and write failures. Client responses
 contain safe messages using `{"error":{"message":"..."}}`.
 
-Successful requests and request completion are not logged. The middleware pipeline
-adds security headers; it does not forward errors or log requests.
+Successful requests and request completion are not logged. The security-header middleware wraps the router directly; it does not forward
+errors or log requests.
 
 ## HTTP handlers
 

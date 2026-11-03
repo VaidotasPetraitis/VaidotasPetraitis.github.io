@@ -9,5 +9,4 @@ type Entry struct {
 	CredentialID string `json:"credentialId,omitempty"`
 	URL          string `json:"url"`
 	Description  string `json:"description,omitempty"`
-	Order        int    `json:"order"`
 }

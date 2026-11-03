@@ -44,7 +44,7 @@ func TestListHandlerReportsReadFailure(t *testing.T) {
 }
 
 func TestListHandlerPreservesJSONOrder(t *testing.T) {
-	files := fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"first","order":2},{"slug":"second","order":0}]`)}}
+	files := fstest.MapFS{"projects.json": {Data: []byte(`[{"slug":"first"},{"slug":"second"}]`)}}
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", ListHandler(files))
 	response := httptest.NewRecorder()

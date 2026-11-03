@@ -1,4 +1,4 @@
-import type { Profile } from './schema';
+import type { Profile } from '../about/schema';
 import { Icon } from '../../icons/Icons';
 import { Link } from 'react-router';
 
@@ -33,11 +33,11 @@ function ContactLink(props: ContactLinkProps) {
   );
 }
 
-type ProfileHeaderProps = {
+type PortfolioHeaderProps = {
   profile?: Profile;
 };
 
-export function ProfileHeader(props: ProfileHeaderProps) {
+export function PortfolioHeader(props: PortfolioHeaderProps) {
   const contactLinks = props.profile?.links ?? fallbackContactLinks;
   const identity = props.profile ?? fallbackIdentity;
 

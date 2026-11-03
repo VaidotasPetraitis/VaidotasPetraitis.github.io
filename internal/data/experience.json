@@ -10,8 +10,7 @@
       "Completed .NET 10 upgrades across four applications, including integration testing and release preparation.",
       "Replaced Flurl with HttpClient across REST and legacy SOAP integrations.",
       "Deputised on two production releases, leading one end to end with a Lead Developer shadowing."
-    ],
-    "order": 0
+    ]
   },
   {
     "id": "aviva-bi",
@@ -24,8 +23,7 @@
       "Built dashboards and data visualisations in Qlik Sense and Power BI.",
       "Worked with Oracle, Amazon Redshift and Teradata, optimising SQL queries and data models.",
       "Developed monitoring and logging tools supporting approximately 6,000 users."
-    ],
-    "order": 1
+    ]
   },
   {
     "id": "fdm-bi",
@@ -34,7 +32,6 @@
     "start": "2017-09",
     "end": "2018-04",
     "description": "Completed a Business Intelligence programme covering SQL, UNIX, ETL, data warehousing, data visualisation and Power BI.",
-    "highlights": [],
-    "order": 2
+    "highlights": []
   }
 ]

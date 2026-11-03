@@ -32,7 +32,6 @@ type Summary struct {
 	Title    string `json:"title"`
 	Category string `json:"category"`
 	Summary  string `json:"summary"`
-	Order    int    `json:"order"`
 }
 type Project struct {
 	Summary

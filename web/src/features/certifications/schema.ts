@@ -12,7 +12,6 @@ export const certificationsSchema = z.array(
     credentialId: text.optional(),
     url: text,
     description: z.string().optional(),
-    order: z.number(),
   }),
 );
 export type Certification = z.infer<typeof certificationsSchema>[number];

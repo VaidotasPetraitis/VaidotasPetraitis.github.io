@@ -1,11 +1,11 @@
-import { certificationsSchema, type Certification } from './schema';
+import { type Certification } from './schema';
 import { ArrowUpRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { apiQuery } from '../../http/api';
+import { getCertifications } from './service';
 import { ApiRequestStatus } from '../../http/ApiRequestStatus';
+import { useRequest } from '../../http/useRequest';
 
 export function Certifications() {
-  const request = useQuery(apiQuery('/api/v1/certifications', certificationsSchema));
+  const request = useRequest(getCertifications);
   const entries = request.data;
 
   if (!entries) {

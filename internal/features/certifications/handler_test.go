@@ -58,7 +58,7 @@ func TestHandlerReportsInvalidJSON(t *testing.T) {
 }
 
 func TestHandlerPreservesArrayOrder(t *testing.T) {
-	files := fstest.MapFS{"certifications.json": {Data: []byte(`[{"id":"first","order":2},{"id":"second","order":0}]`)}}
+	files := fstest.MapFS{"certifications.json": {Data: []byte(`[{"id":"first"},{"id":"second"}]`)}}
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", Handler(files))
 	response := httptest.NewRecorder()
