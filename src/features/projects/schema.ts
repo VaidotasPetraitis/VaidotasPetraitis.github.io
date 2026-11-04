@@ -8,8 +8,7 @@ export const projectSchema = z.object({
   category: text,
   summary: text,
   technologies: z.array(text),
-  source: text,
-  repository: text,
+  source: z.url({ protocol: /^https$/ }),
   playUrl: z.url({ protocol: /^https$/ }).optional(),
   diagram: z
     .object({
@@ -20,7 +19,7 @@ export const projectSchema = z.object({
           from: text,
           to: text,
           label: z.string().optional(),
-          kind: z.string().optional(),
+          kind: z.enum(['forward', 'feedback', 'bypass']),
         }),
       ),
     })
@@ -43,7 +42,7 @@ export const projectSchema = z.object({
     ),
   capabilities: z.array(text),
   organization: text,
-  sections: z.array(z.object({ title: text, paragraphs: z.array(text), items: z.array(text) })),
+  sections: z.array(z.object({ title: text, paragraphs: z.array(text) })),
   screenshots: z.array(z.object({ path: text, alt: text, caption: text })),
   note: z.string(),
 });

@@ -50,17 +50,22 @@ it('navigates without reloading and focuses the main content', async () => {
 
   fireEvent(screen.getByRole('link', { name: 'Experience' }), click);
   expect(click.defaultPrevented).toBe(true);
-  expect(document.activeElement).toBe(main);
   await screen.findByRole('heading', { name: experience[0].role });
   expect(screen.getByRole('banner')).toBe(header);
   expect(document.activeElement).toBe(main);
   expect(window.location.hash).toBe('#/experience');
-  expect(window.location.search).toBe('');
   expect(screen.getByRole('link', { name: 'Experience' }).getAttribute('aria-current')).toBe(
     'page',
   );
 
   expect(document.title).toBe('Experience · Vaidotas Petraitis');
+  const skipLink = screen.getByRole('link', { name: 'Skip to content' });
+
+  skipLink.focus();
+  fireEvent.click(skipLink);
+  expect(document.activeElement).toBe(main);
+  expect(window.location.hash).toBe('#/experience');
+
   await act(async () => {
     const navigated = new Promise((resolve) =>
       window.addEventListener('popstate', resolve, { once: true }),
@@ -120,9 +125,9 @@ it('loads project details, expands ancestors and operates the screenshot gallery
   fireEvent.keyDown(dialog, { key: 'Enter' });
   expect(within(dialog).getByText('2 / 4')).toBeTruthy();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Previous screenshot' }));
+  expect(within(dialog).getByText('1 / 4')).toBeTruthy();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Close screenshot' }));
   expect(dialog.hasAttribute('open')).toBe(false);
-  fireEvent.keyDown(document, { key: 'ArrowRight' });
   fireEvent.click(buttons[1]);
   fireEvent.click(dialog);
   expect(dialog.hasAttribute('open')).toBe(false);

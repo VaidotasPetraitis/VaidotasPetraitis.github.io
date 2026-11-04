@@ -51,13 +51,12 @@ type IconProps = {
 
 export function Icon(props: IconProps) {
   const size = props.size ?? 20;
-  const className = props.className ?? '';
 
   if (Object.hasOwn(brandPaths, props.name)) {
     return (
       <svg
         aria-hidden="true"
-        className={className}
+        className={props.className}
         width={size}
         height={size}
         viewBox="0 0 24 24"
@@ -70,5 +69,5 @@ export function Icon(props: IconProps) {
 
   const Component = outlineIconComponents[props.name] ?? FileText;
 
-  return <Component aria-hidden="true" size={size} strokeWidth={1.6} className={className} />;
+  return <Component aria-hidden="true" size={size} strokeWidth={1.6} className={props.className} />;
 }

@@ -4,7 +4,6 @@ import type { Project } from './schema';
 
 type GalleryProps = {
   screenshots: Project['screenshots'];
-  columns: number;
 };
 
 export function Gallery(props: GalleryProps) {
@@ -52,11 +51,12 @@ export function Gallery(props: GalleryProps) {
   }
 
   const selectedScreenshot = props.screenshots[selectedScreenshotIndex];
+  const columns = screenshotCount > 4 ? 3 : 2;
 
   return (
     <section className="gallery-section">
       <h2>Screenshots</h2>
-      <div className={`gallery gallery-${props.columns}`}>
+      <div className={`gallery gallery-${columns}`}>
         {props.screenshots.map((screenshot, screenshotIndex) => (
           <figure key={screenshot.path}>
             <button

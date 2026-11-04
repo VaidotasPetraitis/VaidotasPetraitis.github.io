@@ -73,10 +73,6 @@ export function FeedbackConnector(props: ConnectorProps) {
   );
 }
 
-function forwardKind(connection: Connection) {
-  return !connection.kind || connection.kind === 'forward';
-}
-
 export function hasForwardConnection(
   from: string,
   next: string | undefined,
@@ -87,6 +83,7 @@ export function hasForwardConnection(
   }
 
   return connections.some(
-    (connection) => connection.from === from && connection.to === next && forwardKind(connection),
+    (connection) =>
+      connection.from === from && connection.to === next && connection.kind === 'forward',
   );
 }

@@ -6,7 +6,6 @@
     "summary": "A POSIX-inspired shell built through the CodeCrafters challenge.",
     "technologies": ["Go", "Process execution", "Parsing"],
     "source": "https://github.com/VaidotasPetraitis/codecrafters-shell-go",
-    "repository": "VaidotasPetraitis/codecrafters-shell-go",
     "diagram": {
       "description": "Input is tokenised by the parser, assembled into a pipeline, then executed as built-in commands or external processes.",
       "stages": [
@@ -39,19 +38,16 @@
         {
           "from": "input",
           "to": "parser",
-          "label": "",
           "kind": "forward"
         },
         {
           "from": "parser",
           "to": "pipeline",
-          "label": "",
           "kind": "forward"
         },
         {
           "from": "pipeline",
           "to": "execution",
-          "label": "",
           "kind": "forward"
         }
       ]
@@ -68,8 +64,7 @@
         "title": "Project context",
         "paragraphs": [
           "Built as a learning project to explore how a shell parses input, connects processes and manages state. The repository demonstrates these capabilities; it does not claim full POSIX compliance."
-        ],
-        "items": []
+        ]
       }
     ],
     "screenshots": [],
@@ -82,7 +77,6 @@
     "summary": "A static browser arena survival game. Dodge enemies, level up, and build a loadout to survive the next wave.",
     "technologies": ["JavaScript", "HTML Canvas", "CSS", "GitHub Pages"],
     "source": "https://github.com/VaidotasPetraitis/rutuliukai",
-    "repository": "VaidotasPetraitis/rutuliukai",
     "playUrl": "https://vaidotaspetraitis.github.io/rutuliukai/",
     "diagram": {
       "description": "GitHub Pages serves the static game. The browser loads the gameplay data and runs the game on an HTML canvas.",
@@ -154,7 +148,6 @@
     "summary": "A lightweight browser quiz with category-based question sets.",
     "technologies": ["JavaScript", "HTML", "CSS", "JSON"],
     "source": "https://github.com/VaidotasPetraitis/quiz",
-    "repository": "VaidotasPetraitis/quiz",
     "diagram": {
       "description": "Select a category, load its JSON question bank, display questions and answer choices, and update the scorecard.",
       "stages": [
@@ -187,19 +180,16 @@
         {
           "from": "category",
           "to": "bank",
-          "label": "",
           "kind": "forward"
         },
         {
           "from": "bank",
           "to": "view",
-          "label": "",
           "kind": "forward"
         },
         {
           "from": "view",
           "to": "score",
-          "label": "",
           "kind": "forward"
         }
       ]
@@ -243,7 +233,6 @@
     "summary": "This static portfolio showcases my engineering experience, certifications, and projects.",
     "technologies": ["React", "TypeScript", "Vite", "GitHub Pages"],
     "source": "https://github.com/VaidotasPetraitis/portforlio",
-    "repository": "VaidotasPetraitis/portforlio",
     "diagram": {
       "description": "Vite bundles the React app and its JSON content. GitHub Pages serves the build, and React renders the selected page in the browser.",
       "stages": [
@@ -287,7 +276,6 @@
     "summary": "A local coding assistant with an agent loop and tool calling.",
     "technologies": ["Go", "OpenAI-compatible APIs", "Tool calling"],
     "source": "https://github.com/VaidotasPetraitis/llm-code-go",
-    "repository": "VaidotasPetraitis/llm-code-go",
     "diagram": {
       "description": "A prompt is sent to the model. The model can call local tools and receive their results repeatedly. Once no further tool calls are needed, the model returns its final response.",
       "stages": [
@@ -320,7 +308,6 @@
         {
           "from": "prompt",
           "to": "model",
-          "label": "",
           "kind": "forward"
         },
         {

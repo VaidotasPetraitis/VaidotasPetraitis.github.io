@@ -60,7 +60,7 @@ function ProjectDetails(props: ProjectDetailsProps) {
             <span className="source-label">
               View source <ArrowUpRight size={15} aria-hidden="true" />
             </span>
-            <span className="repository">{props.project.repository}</span>
+            <span className="repository">{new URL(props.project.source).pathname.slice(1)}</span>
           </span>
           <span className="sr-only"> (opens in a new tab)</span>
         </a>
@@ -95,11 +95,7 @@ function ProjectDetails(props: ProjectDetailsProps) {
         <ProjectSection key={section.title} section={section} />
       ))}
       <p className="project-note">{props.project.note}</p>
-      <Gallery
-        key={props.project.slug}
-        screenshots={props.project.screenshots}
-        columns={props.project.screenshots.length > 4 ? 3 : 2}
-      />
+      <Gallery key={props.project.slug} screenshots={props.project.screenshots} />
     </article>
   );
 }
@@ -115,13 +111,6 @@ function ProjectSection(props: ProjectSectionProps) {
       {props.section.paragraphs.map((text) => (
         <p key={text}>{text}</p>
       ))}
-      {props.section.items.length > 0 && (
-        <ul>
-          {props.section.items.map((text) => (
-            <li key={text}>{text}</li>
-          ))}
-        </ul>
-      )}
     </section>
   );
 }

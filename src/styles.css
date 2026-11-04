@@ -626,8 +626,7 @@ svg {
 }
 .capabilities ul,
 .code-organisation p,
-.project-section p,
-.project-section li {
+.project-section p {
   color: #cbd4e0;
 }
 .code-organisation,
