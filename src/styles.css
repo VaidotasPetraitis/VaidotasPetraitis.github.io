@@ -371,6 +371,7 @@ svg {
 /* Experience timeline */
 .timeline {
   margin-top: 32px;
+  max-width: 80ch;
 }
 .timeline-entry {
   position: relative;
@@ -413,14 +414,13 @@ svg {
 }
 .timeline-entry > p {
   color: #cbd4e0;
-  max-width: 76ch;
 }
 .highlights {
   margin-top: 10px;
   color: #cbd4e0;
 }
 .highlights li + li {
-  margin-top: 4px;
+  margin-top: 12px;
 }
 /* Credentials */
 .credentials {

@@ -6,10 +6,10 @@
     "start": "2024-09",
     "description": "Develop and modernise production C#/.NET applications, backend services and JavaScript journeys for insurance and internal operations.",
     "highlights": [
-      "Led user-management modernisation across two developer teams, from planning through production release.",
-      "Completed .NET 10 upgrades across four applications, including integration testing and release preparation.",
-      "Replaced Flurl with HttpClient across REST and legacy SOAP integrations.",
-      "Deputised on two production releases, leading one end to end with a Lead Developer shadowing."
+      "Led .NET 10 upgrades across four applications and AutoMapper removal across two developer teams, developing GitHub Copilot workflows to support implementation.",
+      "Led SOAP migration and replaced Flurl with HttpClient across REST and SOAP integrations for a financial application supporting tens of millions of pounds in annual broker collections.",
+      "Delivered broker credit and payment features within a wider initiative involving around 100 people, stepping into lead-developer responsibilities to resolve cross-platform issues and unblock go-live testing.",
+      "Led production releases across AWS EKS and EC2, coordinating release plans and execution with product and development teams."
     ]
   },
   {
