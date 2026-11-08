@@ -9,11 +9,11 @@
   "focus": [
     {
       "label": "Development",
-      "text": "C#, .NET, JavaScript, TypeScript, SQL and Go"
+      "text": "C#, .NET, JavaScript, TypeScript, SQL, Go and Python"
     },
     {
       "label": "Applied AI",
-      "text": "LLM agents, tool calling and retrieval-augmented generation (RAG)"
+      "text": "LongChain, LLM agents, tool calling and retrieval-augmented generation (RAG)"
     },
     {
       "label": "Testing",
