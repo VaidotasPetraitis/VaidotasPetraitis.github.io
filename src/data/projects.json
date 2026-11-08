@@ -3,7 +3,7 @@
     "slug": "shell-in-go",
     "title": "Shell in Go",
     "category": "software-engineering",
-    "summary": "A POSIX-inspired shell built through the CodeCrafters challenge.",
+    "summary": "A POSIX-inspired command-line shell, implementing command parsing, pipelines, process execution and job control.",
     "technologies": ["Go", "Process execution", "Parsing"],
     "source": "https://github.com/VaidotasPetraitis/codecrafters-shell-go",
     "diagram": {
