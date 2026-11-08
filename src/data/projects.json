@@ -101,8 +101,17 @@
         }
       ],
       "connections": [
-        { "from": "hosting", "to": "browser", "kind": "forward" },
-        { "from": "browser", "to": "data", "label": "Load JSON", "kind": "forward" }
+        {
+          "from": "hosting",
+          "to": "browser",
+          "kind": "forward"
+        },
+        {
+          "from": "browser",
+          "to": "data",
+          "label": "Load JSON",
+          "kind": "forward"
+        }
       ]
     },
     "capabilities": [
@@ -256,8 +265,16 @@
         }
       ],
       "connections": [
-        { "from": "build", "to": "hosting", "kind": "forward" },
-        { "from": "hosting", "to": "browser", "kind": "forward" }
+        {
+          "from": "build",
+          "to": "hosting",
+          "kind": "forward"
+        },
+        {
+          "from": "hosting",
+          "to": "browser",
+          "kind": "forward"
+        }
       ]
     },
     "capabilities": [
@@ -337,6 +354,84 @@
       "Registered tool definitions and dispatch by name."
     ],
     "organization": "Separate agent, configuration and tool packages, with implementations for shell execution and file operations.",
+    "sections": [],
+    "screenshots": [],
+    "note": "Personal project · Source code available"
+  },
+  {
+    "slug": "python-rag-brain",
+    "title": "Obsidian RAG",
+    "category": "applied-ai-engineering",
+    "summary": "A local RAG API for searching Obsidian notes and generating answers with source citations.",
+    "technologies": [
+      "Python",
+      "FastAPI",
+      "LangChain",
+      "Ollama",
+      "PostgreSQL",
+      "pgvector",
+      "Docker"
+    ],
+    "source": "https://github.com/VaidotasPetraitis/obsidian-rag",
+    "diagram": {
+      "description": "Notes are chunked, embedded and indexed in pgvector. Questions use similarity or MMR search. /retrieve returns passages directly; /ask uses an LLM to generate an answer with sources.",
+      "stages": [
+        {
+          "id": "index",
+          "label": "Vault → vector index",
+          "caption": "POST /ingest · Notes → chunks → embeddings → pgvector",
+          "icon": "folder"
+        },
+        {
+          "id": "retrieval",
+          "label": "Similarity or MMR",
+          "caption": "Find relevant passages or balance relevance and diversity",
+          "icon": "settings"
+        },
+        {
+          "id": "generation",
+          "label": "/ask · LLM",
+          "caption": "Generate an answer from retrieved passages",
+          "icon": "brain"
+        },
+        {
+          "id": "response",
+          "label": "API response",
+          "caption": "/retrieve: passages and distances · /ask: answer and sources",
+          "icon": "message"
+        }
+      ],
+      "connections": [
+        {
+          "from": "index",
+          "to": "retrieval",
+          "kind": "forward"
+        },
+        {
+          "from": "retrieval",
+          "to": "generation",
+          "kind": "forward"
+        },
+        {
+          "from": "generation",
+          "to": "response",
+          "kind": "forward"
+        },
+        {
+          "from": "retrieval",
+          "to": "response",
+          "label": "/retrieve · passages directly",
+          "kind": "bypass"
+        }
+      ]
+    },
+    "capabilities": [
+      "Index Markdown notes without modifying the vault.",
+      "Similarity and MMR search over a persistent vector index.",
+      "Retrieve source passages or generate answers with citations.",
+      "Local LLM inference and incremental re-indexing."
+    ],
+    "organization": "Separate modules for note loading, embeddings, storage, retrieval and answer generation, exposed through FastAPI endpoints.",
     "sections": [],
     "screenshots": [],
     "note": "Personal project · Source code available"

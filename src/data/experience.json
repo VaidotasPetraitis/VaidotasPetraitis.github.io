@@ -6,10 +6,10 @@
     "start": "2024-09",
     "description": "Develop and modernise production C#/.NET applications, backend services and JavaScript journeys for insurance and internal operations.",
     "highlights": [
-      "Led .NET 10 upgrades across four applications and AutoMapper removal across two developer teams, developing GitHub Copilot workflows to support implementation.",
-      "Led SOAP migration and replaced Flurl with HttpClient across REST and SOAP integrations for a financial application supporting tens of millions of pounds in annual broker collections.",
-      "Delivered broker credit and payment features within a wider initiative involving around 100 people, stepping into lead-developer responsibilities to resolve cross-platform issues and unblock go-live testing.",
-      "Led production releases across AWS EKS and EC2, coordinating release plans and execution with product and development teams."
+      "Led back-end component migrations and .NET 10 upgrades across four applications. Coordinated AutoMapper removal across two teams, refactored applications and shared libraries, and developed a GitHub Copilot workflow.",
+      "Led SOAP migration scope, planning and implementation for a financial application supporting hundreds of millions of pounds in annual broker collections. Replaced Flurl with built-in HttpClient across REST and SOAP integrations.",
+      "Delivered credit and payment features for a broker-facing Commercial Lines platform, taking on lead-developer responsibilities to resolve integration issues and unblock go-live testing. In 2½ months after launch, the wider programme recorded 2,625 confirmed Direct Debit journeys (86.5%) and 2,379 instalment policies, representing approximately £20.3 million in Gross Written Premium.",
+      "Led production releases across multiple applications on AWS EKS and EC2, coordinating implementation plans and execution with Product Owners, Scrum Masters and development teams."
     ]
   },
   {
